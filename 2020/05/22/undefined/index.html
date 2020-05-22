@@ -17,7 +17,7 @@
   <meta name="description" content="坚持分享知识，坚持留言支持">
   <meta name="author" content="WeiChenLong">
   <meta name="keywords" content="Python 机器学习 深度学习">
-  <title>Pdpipe库的使用和实战 - WeiChenLong&#39;s Blog</title>
+  <title>模型融合 - WeiChenLong&#39;s Blog</title>
 
   <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
 <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
@@ -132,8 +132,8 @@
               
                 <div class="mt-3 post-meta">
                   <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-                  <time datetime="2020-05-27 18:47">
-                    2020年5月27日 晚上
+                  <time datetime="2020-05-22 13:41">
+                    2020年5月22日 下午
                   </time>
                 </div>
               
@@ -143,7 +143,7 @@
                   
                   <span class="post-meta mr-2">
                     <i class="iconfont icon-chart"></i>
-                    715 字
+                    1.7k 字
                   </span>
                 
 
@@ -153,7 +153,7 @@
                       <i class="iconfont icon-clock-fill"></i>
                     
                     
-                    10
+                    25
                      分钟
                   </span>
                 
@@ -189,65 +189,160 @@
           <div class="post-content mx-auto" id="post">
             
             <article class="markdown-body">
-              <h3 id="Pdpipe初识"><a href="#Pdpipe初识" class="headerlink" title="Pdpipe初识"></a>Pdpipe初识</h3><p>“在<a href="https://pdpipe.github.io/pdpipe/doc/pdpipe/#pdpipe" target="_blank" rel="noopener"><code>pdpipe</code></a>Python包为构建简洁的界面<code>pandas</code> 是有先决条件，是冗长的管线，支持scikit学习变压器的装修改造设计，具有很强的可序列化。<a href="https://pdpipe.github.io/pdpipe/doc/pdpipe/#pdpipe" target="_blank" rel="noopener"><code>pdpipe</code></a> 管道具有简单的界面，提供有关管道应用程序的信息和错误信息，支持管道算术，并使混合类型数据的处理更加容易。”   这是官方文档的解释，我个人认为pdpipe在处理生成特征变量方面确实很方便。</p>
-<h4 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h4><p>win10的Anaconda(推荐)环境下就可以。打开命令行输入：</p>
-<pre><code class="hljs python">pip install pdpipe</code></pre>
+              <h2 id="模型融合"><a href="#模型融合" class="headerlink" title="模型融合"></a>模型融合</h2><p>模型融合采用的的思想，即多个模型的组合可以改善整体的表现。集成模型是一种能在各种的机器学习任务上提高准确率的强有力技术。模型融合是kaggle竞赛后期一个重要的环节，大体来说有如下的类型方式：</p>
+<p>1、简单加权融合：</p>
+<ul>
+<li>回归（分类概率）：算术平均融合（Arithmetic mean），几何平均融合（Geometric mean）</li>
+<li>分类：投票（Voting）</li>
+<li>综合：排序融合(Rank averaging)，log融合</li>
+</ul>
+<p>2、stacking/blending:</p>
+<ul>
+<li>构建多层模型，并利用预测结果再拟合预测。</li>
+</ul>
+<p>3、 boosting/bagging:</p>
+<ul>
+<li>多树的提升方法，在xgboost，Adaboost，GBDT等中已经用到</li>
+</ul>
+<h4 id="平均法（Averaging）"><a href="#平均法（Averaging）" class="headerlink" title="平均法（Averaging）"></a>平均法（Averaging）</h4><p><strong>基本思想</strong>：对于回归问题，一个简单直接的思路是取平均。稍稍改进的方法是进行加权平均。权值可以用排序的方法确定，举个例子，比如A、B、C三种基本模型，模型效果进行排名，假设排名分别是1，2，3，那么给这三个模型赋予的权值分别是3/6、2/6、1/6。</p>
+<p>平均法或加权平均法看似简单，其实后面的高级算法也可以说是基于此而产生的，Bagging或者Boosting都是一种把许多弱分类器这样融合成强分类器的思想。</p>
+<ul>
+<li><p><strong>简单算术平均法：</strong>Averaging方法就多个模型预测的结果进行平均。这种方法既可以用于回归问题，也可以用于对分类问题的概率进行平均。</p>
+</li>
+<li><p><strong>加权算术平均法：</strong>这种方法是平均法的扩展。考虑不同模型的能力不同，对最终结果的贡献也有差异，需要用权重来表征不同模型的重要性importance。</p>
+</li>
+</ul>
+<h4 id="投票法（voting）"><a href="#投票法（voting）" class="headerlink" title="投票法（voting）"></a>投票法（voting）</h4><p><strong>基本思想</strong>：假设对于一个二分类问题，有3个基础模型，现在我们可以在这些基学习器的基础上得到一个投票的分类器，把票数最多的类作为我们要预测的类别。</p>
+<ul>
+<li><p><strong>绝对多数投票法：</strong>最终结果必须在投票中占一半以上。</p>
+</li>
+<li><p><strong>相对多数投票法：</strong>最终结果在投票中票数最多。</p>
+</li>
+<li><p><strong>加权投票法</strong></p>
+</li>
+<li><p><strong>硬投票</strong>：对多个模型直接进行投票，不区分模型结果的相对重要度，最终投票数最多的类为最终被预测的类。</p>
+</li>
+<li><p><strong>软投票：</strong>增加了设置权重的功能，可以为不同模型设置不同权重，进而区别模型不同的重要度。</p>
+</li>
+</ul>
+<p>投票法实现代码：</p>
+<pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.tree <span class="hljs-keyword">import</span> DecisionTreeClassifier
+<span class="hljs-keyword">from</span> sklearn.neighbors <span class="hljs-keyword">import</span> KNeighborsClassifier
+<span class="hljs-keyword">from</span> sklearn.linear_model <span class="hljs-keyword">import</span> LogisticRegression
+<span class="hljs-keyword">from</span> sklearn.ensemble <span class="hljs-keyword">import</span> VotingClassifier
 
-<p>pdpipe的一些模块需要scikit-learn和nltk库的支持，如果没有，pdpipe则会警告，提示你需要安装。</p>
-<h4 id="实战学习"><a href="#实战学习" class="headerlink" title="实战学习"></a>实战学习</h4><p>我们的数据集是汽车行驶信息，如下图：</p>
-<p><img src="/img/Snipaste_2020-05-27_19-05-27.png" srcset="/img/loading.gif" alt="Snipaste_2020-05-27_19-05-27"></p>
-<h5 id="读取代码："><a href="#读取代码：" class="headerlink" title="读取代码："></a>读取代码：</h5><pre><code class="hljs python">df = pd.read_csv(<span class="hljs-string">'./data.csv'</span>,nrows=<span class="hljs-number">100000</span>,encoding=<span class="hljs-string">'gbk'</span>)  <span class="hljs-comment">#读取数据</span>
-df.columns = [<span class="hljs-string">'字段'</span>+str(i) <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> range(<span class="hljs-number">1</span>,<span class="hljs-number">14</span>)]   <span class="hljs-comment">#设置列名</span>
-df = df.drop([<span class="hljs-string">'字段5'</span>,<span class="hljs-string">'字段12'</span>], axis=<span class="hljs-number">1</span>)  <span class="hljs-comment">#删除无用变量</span></code></pre>
+model1 = LogisticRegression(random_state=<span class="hljs-number">2020</span>)
+model2 = DecisionTreeClassifier(random_state=<span class="hljs-number">2020</span>)
+model = VotingClassifier(estimators=[(<span class="hljs-string">'lr'</span>, model1), (<span class="hljs-string">'dt'</span>, model2)], voting=<span class="hljs-string">'hard'</span>)
+model.fit(x_train, y_train)
+model.score(x_test, y_test)</code></pre>
 
-<p>这里需要说的一点是read_csv里的nrows参数，含义是指定读取文件的前n行，我这里n取10w，减少计算时间。</p>
-<h5 id="数据描述："><a href="#数据描述：" class="headerlink" title="数据描述："></a>数据描述：</h5><p>字段1为id，字段3为车牌，字段4为车牌颜色，日期为时间戳，字段11和字段13为路口编码。</p>
-<h4 id="一、清理数据"><a href="#一、清理数据" class="headerlink" title="一、清理数据"></a>一、清理数据</h4><p>使用pdpipe下的<a href="https://pdpipe.github.io/pdpipe/doc/pdpipe/basic_stages.html" target="_blank" rel="noopener">basic_stages</a>模块，该模块主要是做数据清洗。</p>
-<ol>
-<li>删除掉字段2为99、16、23、31、32的行数据</li>
-<li>删除字段3不是车牌的行数据</li>
-<li>删除掉字段3只出现过一次的行数据</li>
-<li>将日期转化为时间戳</li>
-</ol>
-<p><img src="/img/carbon.png" srcset="/img/loading.gif" alt="carbon"></p>
-<p>其中调用的函数：</p>
-<p><img src="/img/match.png" srcset="/img/loading.gif" alt="match"></p>
-<p>这里使用正则来配备车牌，调用re下的group(0)属性返回配备值，使用异常处理来避免不是车牌的情况下配备值不存在。</p>
-<h4 id="二、处理特征"><a href="#二、处理特征" class="headerlink" title="二、处理特征"></a>二、处理特征</h4><p>使用pdpipe下的<a href="https://pdpipe.github.io/pdpipe/doc/pdpipe/col_generation.html" target="_blank" rel="noopener">col_generation</a>模块，该模块使用函数来生成新的变量。</p>
-<p>将剩下的数据按照字段3相同（同一车牌）的时间顺序排列。使用groupby函数按照字段3聚合，然后对每个group排序。</p>
-<pre><code class="hljs python">data1 = data.groupby(<span class="hljs-string">'字段3'</span>).apply(<span class="hljs-keyword">lambda</span> x: x.sort_values(<span class="hljs-string">'日期'</span>))
-data1.index = data.index</code></pre>
+<h4 id="堆叠法（Stacking）"><a href="#堆叠法（Stacking）" class="headerlink" title="堆叠法（Stacking）"></a>堆叠法（Stacking）</h4><p><strong>基本思想</strong>：stacking 就是当用初始训练数据学习出若干个基学习器后，将这几个学习器的预测结果作为新的训练集，来学习一个新的学习器。对不同模型预测的结果再进行建模。</p>
+<p><img src="/img/%E6%A8%A1%E5%9E%8B%E8%9E%8D%E5%90%88.png" srcset="/img/loading.gif" alt="模型融合"></p>
+<p>在stacking方法中，我们把个体学习器叫做初级学习器，用于结合的学习器叫做次级学习器或元学习器，次级学习器用于训练的数据叫做次级训练集。次级训练集是在训练集上用初级学习器得到的。</p>
+<p>Stacking本质上就是这么直接的思路，但是直接这样有时对于如果训练集和测试集分布不那么一致的情况下是有一点问题的，其问题在于用初始模型训练的标签再利用真实标签进行再训练，毫无疑问会导致一定的模型过拟合训练集，这样或许模型在测试集上的泛化能力或者说效果会有一定的下降，因此现在的问题变成了如何降低再训练的过拟合性，这里我们一般有两种方法：</p>
+<ul>
+<li>次级模型尽量选择简单的线性模型，但是经过本人实践线性模型效果并不好，我推荐使用LightGBM</li>
+<li>利用K折交叉验证</li>
+</ul>
+<p>调用APi实现stacking：</p>
+<pre><code class="hljs python"><span class="hljs-keyword">from</span> heamy.dataset <span class="hljs-keyword">import</span> Dataset
+<span class="hljs-keyword">from</span> heamy.estimator <span class="hljs-keyword">import</span> Regressor, Classifier
+<span class="hljs-keyword">from</span> heamy.pipeline <span class="hljs-keyword">import</span> ModelsPipeline
+<span class="hljs-keyword">from</span> sklearn <span class="hljs-keyword">import</span> cross_validation
+<span class="hljs-keyword">from</span> sklearn.ensemble <span class="hljs-keyword">import</span> RandomForestRegressor
+<span class="hljs-keyword">from</span> sklearn.linear_model <span class="hljs-keyword">import</span> LinearRegression
+<span class="hljs-keyword">from</span> sklearn.metrics <span class="hljs-keyword">import</span> mean_absolute_error
+<span class="hljs-comment">#加载数据集</span>
+<span class="hljs-keyword">from</span> sklearn.datasets <span class="hljs-keyword">import</span> load_boston
+data = load_boston()
+X, y = data[<span class="hljs-string">'data'</span>], data[<span class="hljs-string">'target'</span>]
+X_train, X_test, y_train, y_test = cross_validation.train_test_split(X, y, test_size=<span class="hljs-number">0.1</span>, random_state=<span class="hljs-number">111</span>)
+<span class="hljs-comment">#创建数据集</span>
+dataset = Dataset(X_train,y_train,X_test)
+<span class="hljs-comment">#创建RF模型和LR模型</span>
+model_rf = Regressor(dataset=dataset, estimator=RandomForestRegressor, parameters=&#123;<span class="hljs-string">'n_estimators'</span>: <span class="hljs-number">50</span>&#125;,name=<span class="hljs-string">'rf'</span>)
+model_lr = Regressor(dataset=dataset, estimator=LinearRegression, parameters=&#123;<span class="hljs-string">'normalize'</span>: <span class="hljs-literal">True</span>&#125;,name=<span class="hljs-string">'lr'</span>)
+<span class="hljs-comment"># Stack两个模型</span>
+<span class="hljs-comment"># Returns new dataset with out-of-fold predictions</span>
+pipeline = ModelsPipeline(model_rf,model_lr)
+stack_ds = pipeline.stack(k=<span class="hljs-number">10</span>,seed=<span class="hljs-number">111</span>)
+<span class="hljs-comment">#第二层使用lr模型stack</span>
+stacker = Regressor(dataset=stack_ds, estimator=LinearRegression)
+results = stacker.predict()
+<span class="hljs-comment"># 使用5折交叉验证结果</span>
+results10 = stacker.validate(k=<span class="hljs-number">5</span>,scorer=mean_absolute_error)</code></pre>
 
-<p>然后开始处理：</p>
-<ol>
-<li>前后相邻两行记录时间差小于30min，则删除靠后一条的行数据</li>
-<li>前后相邻两行记录的字段13相同，则删除靠前的行数据</li>
-<li>若最后同一车牌下只剩一个行数据，则删除</li>
-</ol>
-<p><img src="/img/2.png" srcset="/img/loading.gif" alt="2"></p>
-<p>函数模块：</p>
-<p><img src="/img/1.png" srcset="/img/loading.gif" alt="1"></p>
-<h4 id="三、小知识点"><a href="#三、小知识点" class="headerlink" title="三、小知识点"></a>三、小知识点</h4><p>groupby函数下，可以对每个group操作，group可以和dataframe一样处理。</p>
-<pre><code class="hljs python">groupby(<span class="hljs-string">'字段3'</span>).apply(<span class="hljs-keyword">lambda</span> j: j[<span class="hljs-string">'字段13'</span>].iloc[<span class="hljs-number">0</span>])   <span class="hljs-comment">#取出每个group的第一行</span></code></pre>
+<p>手动实现：只创建一个基学习器为例</p>
+<pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.model_selection <span class="hljs-keyword">import</span> StratifiedKFold,KFold,RepeatedKFold
+<span class="hljs-keyword">import</span> xgboost <span class="hljs-keyword">as</span> xgb
+<span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np
 
-<pre><code class="hljs python"><span class="hljs-comment">#对每个group应用函数，还可以实时操作</span>
-<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">f4</span><span class="hljs-params">(x)</span>:</span>
-    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> range(len(x)):
-        x[<span class="hljs-string">'OD'</span>].iloc[i] = x[<span class="hljs-string">'字段11'</span>].iloc[i][i]
-    <span class="hljs-keyword">return</span> x
-x.groupby(<span class="hljs-string">'字段3'</span>).apply(<span class="hljs-keyword">lambda</span> j: f4(j))</code></pre>
+skf = StratifiedKFold(n_splits = <span class="hljs-number">5</span>, shuffle = <span class="hljs-literal">True</span> ,random_state=<span class="hljs-number">16</span>)
+oof_xgb = np.zeros(len(train))  <span class="hljs-comment">#创建数组</span>
+pre_xgb = np.zeros(len(test))
 
+<span class="hljs-keyword">for</span> k,(train_in,test_in) <span class="hljs-keyword">in</span> enumerate(skf.split(X,y)):
+    X_train,X_test,y_train,y_test = X[train_in],X[test_in],y[train_in],y[test_in]
+    xgb_train = xgb.DMatrix(X_train, y_train)
+    xgb_eval = xgb.DMatrix(X_test, y_test)
+    xgb_params = &#123;<span class="hljs-string">'eta'</span>: <span class="hljs-number">0.008</span>, 
+              <span class="hljs-string">'max_depth'</span>: <span class="hljs-number">5</span>,
+              <span class="hljs-string">'subsample'</span>: <span class="hljs-number">0.8</span>, 
+              <span class="hljs-string">'colsample_bytree'</span>: <span class="hljs-number">0.8</span>, 
+              <span class="hljs-string">'objective'</span>:<span class="hljs-string">'binary:logistic'</span>,
+              <span class="hljs-string">'eval_metric'</span>:<span class="hljs-string">'auc'</span>,
+              <span class="hljs-string">'silent'</span>: <span class="hljs-literal">True</span>, 
+              <span class="hljs-string">'nthread'</span>: <span class="hljs-number">4</span>,
+              &#125;
+    <span class="hljs-comment"># train</span>
+    watchlist = [(xgb_train,<span class="hljs-string">'train'</span>),(xgb_eval,<span class="hljs-string">'val'</span>)] 
+    xgb_model = xgb.train(xgb_params,
+                    xgb_train,
+                    evals=watchlist,
+                    num_boost_round=<span class="hljs-number">40000</span>,
+                    early_stopping_rounds=<span class="hljs-number">50</span>,
+                    verbose_eval=<span class="hljs-number">100</span>)
+    print(<span class="hljs-string">'Start predicting...'</span>)
+    oof_xgb[test_in] = xgb_model.predict(xgb.DMatrix(X[test_in]), ntree_limit=xgb_model.best_ntree_limit)
+    pre_xgb += xgb_model.predict(xgb.DMatrix(test), ntree_limit=xgb_model.best_ntree_limit) / <span class="hljs-number">5</span>
+print(<span class="hljs-string">'xgb predict over'</span>)</code></pre>
+
+<h4 id="混合法（Blending）"><a href="#混合法（Blending）" class="headerlink" title="混合法（Blending）"></a>混合法（Blending）</h4><p><strong>基本思想：</strong>Blending采用了和stacking同样的方法，不过只从训练集中选择一个fold的结果，再和原始特征进行concat作为元学习器meta learner的特征，测试集上进行同样的操作。<br>把原始的训练集先分成两部分，比如70%的数据作为新的训练集，剩下30%的数据作为测试集。</p>
+<ul>
+<li>第一层，我们在这70%的数据上训练多个模型，然后去预测那30%数据的label，同时也预测test集的label</li>
+<li>在第二层，我们就直接用这30%数据在第一层预测的结果做为新特征继续训练，然后用test集第一层预测的label做特征，用第二层训练的模型做进一步预测</li>
+</ul>
+<p><strong>Stacking与Blending的对比：</strong></p>
+<p>优点在于：</p>
+<ul>
+<li>blending比stacking简单，因为不用进行k次的交叉验证来获得stacker feature</li>
+<li>blending避开了一个信息泄露问题：generlizers和stacker使用了不一样的数据集</li>
+</ul>
+<p>缺点在于：</p>
+<ul>
+<li>blending使用了很少的数据（第二阶段的blender只使用training set10%的量）</li>
+<li>blender可能会过拟合</li>
+<li>stacking使用多次的交叉验证会比较稳健</li>
+</ul>
 
             </article>
             <hr>
             <div>
               <div class="post-metas mb-3">
                 
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E6%95%B0%E6%8D%AE%E6%8C%96%E6%8E%98/">数据挖掘</a>
+                    
+                  </div>
+                
                 
                   <div class="post-meta">
                     <i class="iconfont icon-tags"></i>
                     
-                      <a class="hover-with-bg" href="/tags/python%E7%BB%83%E4%B9%A0/">python练习</a>
+                      <a class="hover-with-bg" href="/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>
                     
                   </div>
                 
@@ -260,9 +355,9 @@ x.groupby(<span class="hljs-string">'字段3'</span>).apply(<span class="hljs-ke
                   <div class="post-prev col-6">
                     
                     
-                      <a href="/2020/05/28/undefined/">
+                      <a href="/2020/05/27/undefined/">
                         <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">自动特征编码</span>
+                        <span class="hidden-mobile">Pdpipe库的使用和实战</span>
                         <span class="visible-mobile">上一篇</span>
                       </a>
                     
@@ -270,8 +365,8 @@ x.groupby(<span class="hljs-string">'字段3'</span>).apply(<span class="hljs-ke
                   <div class="post-next col-6">
                     
                     
-                      <a href="/2020/05/22/undefined/">
-                        <span class="hidden-mobile">模型融合</span>
+                      <a href="/2019/05/21/undefined/">
+                        <span class="hidden-mobile">连续特征处理</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
@@ -495,7 +590,7 @@ x.groupby(<span class="hljs-string">'字段3'</span>).apply(<span class="hljs-ke
     var typed = new Typed('#subtitle', {
       strings: [
         '  ',
-        "Pdpipe库的使用和实战&nbsp;",
+        "模型融合&nbsp;",
       ],
       cursorChar: "_",
       typeSpeed: 70,
