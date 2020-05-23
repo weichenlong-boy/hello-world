@@ -223,6 +223,31 @@
   
   
   <entry>
+    <title>机器学习的5中采样方法</title>
+    <link href="/2020/05/23/undefined/"/>
+    <url>/2020/05/23/undefined/</url>
+    
+    <content type="html"><![CDATA[<h2 id="机器学习的5中采样方法"><a href="#机器学习的5中采样方法" class="headerlink" title="机器学习的5中采样方法"></a>机器学习的5中采样方法</h2><p>采样问题是数据科学中的常见问题，对此，WalmartLabs 的数据科学家 Rahul Agarwal 分享了数据科学家需要了解的 5 种采样方法，编译整理如下，本文介绍了在处理数据时可以使用的一些最常见的采样技术。</p><h4 id="简单随机抽样"><a href="#简单随机抽样" class="headerlink" title="简单随机抽样"></a>简单随机抽样</h4><p>假设您要选择一个群体的子集，其中该子集的每个成员被选择的概率都相等。</p><p>下面我们从一个数据集中选择 100 个采样点。</p><pre><code class="hljs python">sample_df = df.sample(<span class="hljs-number">100</span>)</code></pre><h4 id="分层采样"><a href="#分层采样" class="headerlink" title="分层采样"></a>分层采样</h4><p>分层抽样在解决样本不平衡，避免过拟合有一定效果。</p><pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.model_selection <span class="hljs-keyword">import</span> train_test_splitX_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y,  test_size=<span class="hljs-number">0.25</span>)</code></pre><p><code>train_test_split</code>中的  <code>stratify</code>是指定某一特征或者Label，按照正负样本的比例抽取：</p><h4 id="随机欠采样和过采样"><a href="#随机欠采样和过采样" class="headerlink" title="随机欠采样和过采样"></a>随机欠采样和过采样</h4><p>我们经常会遇到不平衡的数据集。</p><p>一种广泛采用的处理高度不平衡数据集的技术称为重采样。它包括从多数类（欠采样）中删除样本或向少数类（过采样）中添加更多示例。<strong>但是在机器学习实践中，欠采样会丢失数据信息，过采样效果更好。</strong></p><p><img src="/img/%E6%8A%BD%E6%A0%B7.png" srcset="/img/loading.gif" alt="chouyang"></p><p>让我们先创建一些不平衡数据示例。</p><pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.datasets <span class="hljs-keyword">import</span> make_classification<span class="hljs-keyword">import</span> pandas <span class="hljs-keyword">as</span> pdX, y = make_classification( n_classes=<span class="hljs-number">2</span>, class_sep=<span class="hljs-number">1.5</span>, weights=[<span class="hljs-number">0.9</span>, <span class="hljs-number">0.1</span>], n_informative=<span class="hljs-number">3</span>, n_redundant=<span class="hljs-number">1</span>, flip_y=<span class="hljs-number">0</span>, n_features=<span class="hljs-number">20</span>, n_clusters_per_class=<span class="hljs-number">1</span>, n_samples=<span class="hljs-number">100</span>, random_state=<span class="hljs-number">10</span>)X = pd.DataFrame(X)X[ target ] = y</code></pre><p>我们现在可以使用以下方法进行随机过采样和欠采样：</p><pre><code class="hljs python">num_0 = len(X[X[ target ]==<span class="hljs-number">0</span>])num_1 = len(X[X[ target ]==<span class="hljs-number">1</span>])print(num_0,num_1)<span class="hljs-comment"># random 欠采样</span>undersampleundersampled_data = pd.concat([ X[X[ target ]==<span class="hljs-number">0</span>].sample(num_1) , X[X[ target ]==<span class="hljs-number">1</span>] ])print(len(undersampled_data))<span class="hljs-comment"># random 过采样</span>oversampleoversampled_data = pd.concat([ X[X[ target ]==<span class="hljs-number">0</span>] , X[X[ target ]==<span class="hljs-number">1</span>].sample(num_0, replace=<span class="hljs-literal">True</span>) ])print(len(oversampled_data))</code></pre><h4 id="使用-imbalanced-learn-进行欠采样和过采样（-imbalanced-learn）"><a href="#使用-imbalanced-learn-进行欠采样和过采样（-imbalanced-learn）" class="headerlink" title="使用 imbalanced-learn 进行欠采样和过采样（ imbalanced-learn）"></a>使用 imbalanced-learn 进行欠采样和过采样（<a href="https://imbalanced-learn.readthedocs.io/en/stable/index.html" target="_blank" rel="noopener"> imbalanced-learn</a>）</h4><p>imbalanced-learn（imblearn）是一个用于解决不平衡数据集问题的 python 包，它提供了多种方法来进行欠采样和过采样。</p><ul><li><strong>使用 Tomek Links 进行欠采样：</strong></li></ul><p>imbalanced-learn 提供的一种方法叫做 Tomek Links。Tomek Links 是邻近的两个相反类的例子。<br>在这个算法中，我们最终从 Tomek Links 中删除了大多数元素，这为分类器提供了一个更好的决策边界。</p><p><img src="/img/Tomek.png" srcset="/img/loading.gif" alt="Tomek"></p><pre><code class="hljs python"><span class="hljs-keyword">from</span> imblearn.under_sampling <span class="hljs-keyword">import</span> TomekLinkstl = TomekLinks(return_indices=<span class="hljs-literal">True</span>, ratio= majority )X_tl, y_tl, id_tl = tl.fit_sample(X, y)</code></pre><ul><li><strong>使用 SMOTE 进行过采样：</strong></li></ul><p>在 SMOE（Synthetic Minority Oversampling Technique）中，我们在现有元素附近合并少数类的元素。</p><p><img src="/img/smote.png" srcset="/img/loading.gif" alt="smote"></p><pre><code class="hljs python"><span class="hljs-keyword">from</span> imblearn.over_sampling <span class="hljs-keyword">import</span> SMOTEsmote = SMOTE(ratio= minority )X_sm, y_sm = smote.fit_sample(X, y)</code></pre><p>imbLearn 包中还有许多其他方法，可以用于欠采样（Cluster Centroids, NearMiss 等）和过采样（ADASYN 和 bSMOTE）。</p><p>抽样是数据科学中的一个重要课题，但我们实际上并没有讨论得足够多。</p><p>有时，一个好的抽样策略会大大推进项目的进展。错误的抽样策略可能会给我们带来错误的结果。因此，在选择抽样策略时应该小心。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>数据挖掘</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>机器学习</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>模型融合</title>
     <link href="/2020/05/22/undefined/"/>
     <url>/2020/05/22/undefined/</url>
