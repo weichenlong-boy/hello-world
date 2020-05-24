@@ -17,7 +17,7 @@
   <meta name="description" content="坚持分享知识，坚持留言支持">
   <meta name="author" content="WeiChenLong">
   <meta name="keywords" content="Python 机器学习 深度学习">
-  <title>模型融合 - WeiChenLong&#39;s Blog</title>
+  <title>python内置的小函数 - WeiChenLong&#39;s Blog</title>
 
   <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
 <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
@@ -132,8 +132,8 @@
               
                 <div class="mt-3 post-meta">
                   <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-                  <time datetime="2020-05-22 13:41">
-                    2020年5月22日 下午
+                  <time datetime="2020-05-25 00:09">
+                    2020年5月25日 凌晨
                   </time>
                 </div>
               
@@ -143,7 +143,7 @@
                   
                   <span class="post-meta mr-2">
                     <i class="iconfont icon-chart"></i>
-                    1.7k 字
+                    1.3k 字
                   </span>
                 
 
@@ -153,7 +153,7 @@
                       <i class="iconfont icon-clock-fill"></i>
                     
                     
-                    25
+                    19
                      分钟
                   </span>
                 
@@ -189,155 +189,116 @@
           <div class="post-content mx-auto" id="post">
             
             <article class="markdown-body">
-              <h2 id="模型融合"><a href="#模型融合" class="headerlink" title="模型融合"></a>模型融合</h2><p>模型融合采用的的思想，即多个模型的组合可以改善整体的表现。集成模型是一种能在各种的机器学习任务上提高准确率的强有力技术。模型融合是kaggle竞赛后期一个重要的环节，大体来说有如下的类型方式：</p>
-<p>1、简单加权融合：</p>
-<ul>
-<li>回归（分类概率）：算术平均融合（Arithmetic mean），几何平均融合（Geometric mean）</li>
-<li>分类：投票（Voting）</li>
-<li>综合：排序融合(Rank averaging)，log融合</li>
-</ul>
-<p>2、stacking/blending:</p>
-<ul>
-<li>构建多层模型，并利用预测结果再拟合预测。</li>
-</ul>
-<p>3、 boosting/bagging:</p>
-<ul>
-<li>多树的提升方法，在xgboost，Adaboost，GBDT等中已经用到</li>
-</ul>
-<h4 id="平均法（Averaging）"><a href="#平均法（Averaging）" class="headerlink" title="平均法（Averaging）"></a>平均法（Averaging）</h4><p><strong>基本思想</strong>：对于回归问题，一个简单直接的思路是取平均。稍稍改进的方法是进行加权平均。权值可以用排序的方法确定，举个例子，比如A、B、C三种基本模型，模型效果进行排名，假设排名分别是1，2，3，那么给这三个模型赋予的权值分别是3/6、2/6、1/6。</p>
-<p>平均法或加权平均法看似简单，其实后面的高级算法也可以说是基于此而产生的，Bagging或者Boosting都是一种把许多弱分类器这样融合成强分类器的思想。</p>
-<ul>
-<li><p><strong>简单算术平均法：</strong>Averaging方法就多个模型预测的结果进行平均。这种方法既可以用于回归问题，也可以用于对分类问题的概率进行平均。</p>
-</li>
-<li><p><strong>加权算术平均法：</strong>这种方法是平均法的扩展。考虑不同模型的能力不同，对最终结果的贡献也有差异，需要用权重来表征不同模型的重要性importance。</p>
-</li>
-</ul>
-<h4 id="投票法（voting）"><a href="#投票法（voting）" class="headerlink" title="投票法（voting）"></a>投票法（voting）</h4><p><strong>基本思想</strong>：假设对于一个二分类问题，有3个基础模型，现在我们可以在这些基学习器的基础上得到一个投票的分类器，把票数最多的类作为我们要预测的类别。</p>
-<ul>
-<li><p><strong>绝对多数投票法：</strong>最终结果必须在投票中占一半以上。</p>
-</li>
-<li><p><strong>相对多数投票法：</strong>最终结果在投票中票数最多。</p>
-</li>
-<li><p><strong>加权投票法</strong></p>
-</li>
-<li><p><strong>硬投票</strong>：对多个模型直接进行投票，不区分模型结果的相对重要度，最终投票数最多的类为最终被预测的类。</p>
-</li>
-<li><p><strong>软投票：</strong>增加了设置权重的功能，可以为不同模型设置不同权重，进而区别模型不同的重要度。</p>
-</li>
-</ul>
-<p>投票法实现代码：</p>
-<pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.tree <span class="hljs-keyword">import</span> DecisionTreeClassifier
-<span class="hljs-keyword">from</span> sklearn.neighbors <span class="hljs-keyword">import</span> KNeighborsClassifier
-<span class="hljs-keyword">from</span> sklearn.linear_model <span class="hljs-keyword">import</span> LogisticRegression
-<span class="hljs-keyword">from</span> sklearn.ensemble <span class="hljs-keyword">import</span> VotingClassifier
+              <h2 id="python内置的小函数"><a href="#python内置的小函数" class="headerlink" title="python内置的小函数"></a>python内置的小函数</h2><p>都是个人觉得强大而精致的几个函数。</p>
+<h4 id="一用而过：lambda"><a href="#一用而过：lambda" class="headerlink" title="一用而过：lambda"></a>一用而过：lambda</h4><p>很多语言都有匿名函数，python的匿名函数写作lambda，当需要实现一定功能而又不想“大张旗鼓”的def一个函数时，lambda就是最优的选择。</p>
+<p>其语法格式一般是这样的：</p>
+<pre><code class="hljs python"><span class="hljs-keyword">lambda</span> x:x**<span class="hljs-number">2</span>
 
-model1 = LogisticRegression(random_state=<span class="hljs-number">2020</span>)
-model2 = DecisionTreeClassifier(random_state=<span class="hljs-number">2020</span>)
-model = VotingClassifier(estimators=[(<span class="hljs-string">'lr'</span>, model1), (<span class="hljs-string">'dt'</span>, model2)], voting=<span class="hljs-string">'hard'</span>)
-model.fit(x_train, y_train)
-model.score(x_test, y_test)</code></pre>
+<span class="hljs-comment"># &lt;function __main__.&lt;lambda&gt;(x)&gt;</span></code></pre>
 
-<h4 id="堆叠法（Stacking）"><a href="#堆叠法（Stacking）" class="headerlink" title="堆叠法（Stacking）"></a>堆叠法（Stacking）</h4><p><strong>基本思想</strong>：stacking 就是当用初始训练数据学习出若干个基学习器后，将这几个学习器的预测结果作为新的训练集，来学习一个新的学习器。对不同模型预测的结果再进行建模。</p>
-<p><img src="/img/%E6%A8%A1%E5%9E%8B%E8%9E%8D%E5%90%88.png" srcset="/img/loading.gif" alt="模型融合"></p>
-<p>在stacking方法中，我们把个体学习器叫做初级学习器，用于结合的学习器叫做次级学习器或元学习器，次级学习器用于训练的数据叫做次级训练集。次级训练集是在训练集上用初级学习器得到的。</p>
-<p>Stacking本质上就是这么直接的思路，但是直接这样有时对于如果训练集和测试集分布不那么一致的情况下是有一点问题的，其问题在于用初始模型训练的标签再利用真实标签进行再训练，毫无疑问会导致一定的模型过拟合训练集，这样或许模型在测试集上的泛化能力或者说效果会有一定的下降，因此现在的问题变成了如何降低再训练的过拟合性，这里我们一般有两种方法：</p>
-<ul>
-<li>次级模型尽量选择简单的线性模型，但是经过本人实践线性模型效果并不好，我推荐使用LightGBM</li>
-<li>利用K折交叉验证</li>
-</ul>
-<p>调用APi实现stacking：</p>
-<pre><code class="hljs python"><span class="hljs-keyword">from</span> heamy.dataset <span class="hljs-keyword">import</span> Dataset
-<span class="hljs-keyword">from</span> heamy.estimator <span class="hljs-keyword">import</span> Regressor, Classifier
-<span class="hljs-keyword">from</span> heamy.pipeline <span class="hljs-keyword">import</span> ModelsPipeline
-<span class="hljs-keyword">from</span> sklearn <span class="hljs-keyword">import</span> cross_validation
-<span class="hljs-keyword">from</span> sklearn.ensemble <span class="hljs-keyword">import</span> RandomForestRegressor
-<span class="hljs-keyword">from</span> sklearn.linear_model <span class="hljs-keyword">import</span> LinearRegression
-<span class="hljs-keyword">from</span> sklearn.metrics <span class="hljs-keyword">import</span> mean_absolute_error
-<span class="hljs-comment">#加载数据集</span>
-<span class="hljs-keyword">from</span> sklearn.datasets <span class="hljs-keyword">import</span> load_boston
-data = load_boston()
-X, y = data[<span class="hljs-string">'data'</span>], data[<span class="hljs-string">'target'</span>]
-X_train, X_test, y_train, y_test = cross_validation.train_test_split(X, y, test_size=<span class="hljs-number">0.1</span>, random_state=<span class="hljs-number">111</span>)
-<span class="hljs-comment">#创建数据集</span>
-dataset = Dataset(X_train,y_train,X_test)
-<span class="hljs-comment">#创建RF模型和LR模型</span>
-model_rf = Regressor(dataset=dataset, estimator=RandomForestRegressor, parameters=&#123;<span class="hljs-string">'n_estimators'</span>: <span class="hljs-number">50</span>&#125;,name=<span class="hljs-string">'rf'</span>)
-model_lr = Regressor(dataset=dataset, estimator=LinearRegression, parameters=&#123;<span class="hljs-string">'normalize'</span>: <span class="hljs-literal">True</span>&#125;,name=<span class="hljs-string">'lr'</span>)
-<span class="hljs-comment"># Stack两个模型</span>
-<span class="hljs-comment"># Returns new dataset with out-of-fold predictions</span>
-pipeline = ModelsPipeline(model_rf,model_lr)
-stack_ds = pipeline.stack(k=<span class="hljs-number">10</span>,seed=<span class="hljs-number">111</span>)
-<span class="hljs-comment">#第二层使用lr模型stack</span>
-stacker = Regressor(dataset=stack_ds, estimator=LinearRegression)
-results = stacker.predict()
-<span class="hljs-comment"># 使用5折交叉验证结果</span>
-results10 = stacker.validate(k=<span class="hljs-number">5</span>,scorer=mean_absolute_error)</code></pre>
+<p>也可以将它赋值给一个变量，由于python中一切皆对象，所以后续程序中就可以用该变量调用这个匿名函数。</p>
+<pre><code class="hljs python">f = <span class="hljs-keyword">lambda</span> x:x**<span class="hljs-number">2</span>
 
-<p>手动实现：只创建一个基学习器为例</p>
-<pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.model_selection <span class="hljs-keyword">import</span> StratifiedKFold,KFold,RepeatedKFold
-<span class="hljs-keyword">import</span> xgboost.sklearn <span class="hljs-keyword">import</span> XGBClassifier
-<span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np
+f(<span class="hljs-number">2</span>)
+<span class="hljs-comment"># 4</span></code></pre>
 
-skf = StratifiedKFold(n_splits = <span class="hljs-number">5</span>, shuffle = <span class="hljs-literal">True</span> ,random_state=<span class="hljs-number">16</span>)
-oof_xgb = np.zeros(len(train))  <span class="hljs-comment">#创建数组</span>
-pre_xgb = np.zeros(len(test))
+<p>当然，这里其实没必要应用lambda来实现，因为既然要显式调用，还不如干脆直接写个明确的函数罢了。lambda函数更广泛的应用场景在于该匿名函数作为另一个函数的参数传递时，应用就比较合适了，例如，将lambda作为sort()函数的key参数，就可以实现特定功能的排序。</p>
+<pre><code class="hljs python">dyct = &#123;<span class="hljs-string">'a'</span>:<span class="hljs-number">2</span>, <span class="hljs-string">'b'</span>:<span class="hljs-number">1</span>, <span class="hljs-string">'c'</span>:<span class="hljs-number">5</span>&#125;
+sorted(dyct.items(), key = <span class="hljs-keyword">lambda</span> x:x[<span class="hljs-number">1</span>])
+<span class="hljs-comment">#日期排序</span>
+df.sort_values(<span class="hljs-string">'日期'</span>)
 
-<span class="hljs-keyword">for</span> k,(train_in,test_in) <span class="hljs-keyword">in</span> enumerate(skf.split(train,train_y)):
-    X_train,X_test,y_train,y_test = X[train_in],X[test_in],y[train_in],y[test_in]
-    params = &#123;<span class="hljs-string">'learning_rate'</span>: <span class="hljs-number">0.008</span>, 
-              <span class="hljs-string">'n_estimators'</span>: <span class="hljs-number">1000</span>
-              <span class="hljs-string">'max_depth'</span>: <span class="hljs-number">5</span>,
-              <span class="hljs-string">'subsample'</span>: <span class="hljs-number">0.8</span>, 
-              <span class="hljs-string">'colsample_bytree'</span>: <span class="hljs-number">0.8</span>, 
-              <span class="hljs-string">'objective'</span>:<span class="hljs-string">'binary:logistic'</span>,
-              <span class="hljs-string">'eval_metric'</span>:<span class="hljs-string">'auc'</span>,
-              <span class="hljs-string">'silent'</span>: <span class="hljs-literal">True</span>, 
-              <span class="hljs-string">'nthread'</span>: <span class="hljs-number">4</span>,
-              &#125;
-    <span class="hljs-comment"># train</span>
-    clf = XGBClassifier(params)
-    clf.fit(trn_x, trn_y,eval_set=[(val_x, val_y)],eval_metric=<span class="hljs-string">'auc'</span>,early_stopping_rounds=<span class="hljs-number">100</span>,verbose=<span class="hljs-number">100</span>)
-    print(<span class="hljs-string">'Start predicting...'</span>)
-    oof_xgb[test_in] = clf.predict(X_test)
-    pre_xgb += clf.predict(test) / skf.n_splits
-    
-print(<span class="hljs-string">'XGB predict over'</span>)</code></pre>
+<span class="hljs-comment"># [('b', 1), ('a', 2), ('c', 5)]</span></code></pre>
 
-<h4 id="混合法（Blending）"><a href="#混合法（Blending）" class="headerlink" title="混合法（Blending）"></a>混合法（Blending）</h4><p><strong>基本思想：</strong>Blending采用了和stacking同样的方法，不过只从训练集中选择一个fold的结果，再和原始特征进行concat作为元学习器meta learner的特征，测试集上进行同样的操作。<br>把原始的训练集先分成两部分，比如70%的数据作为新的训练集，剩下30%的数据作为测试集。</p>
-<ul>
-<li>第一层，我们在这70%的数据上训练多个模型，然后去预测那30%数据的label，同时也预测test集的label</li>
-<li>在第二层，我们就直接用这30%数据在第一层预测的结果做为新特征继续训练，然后用test集第一层预测的label做特征，用第二层训练的模型做进一步预测</li>
-</ul>
-<p><strong>Stacking与Blending的对比：</strong></p>
-<p>优点在于：</p>
-<ul>
-<li>blending比stacking简单，因为不用进行k次的交叉验证来获得stacker feature</li>
-<li>blending避开了一个信息泄露问题：generlizers和stacker使用了不一样的数据集</li>
-</ul>
-<p>缺点在于：</p>
-<ul>
-<li>blending使用了很少的数据（第二阶段的blender只使用training set10%的量）</li>
-<li>blender可能会过拟合</li>
-<li>stacking使用多次的交叉验证会比较稳健</li>
-</ul>
+<h4 id="智能解压：zip"><a href="#智能解压：zip" class="headerlink" title="智能解压：zip"></a>智能解压：zip</h4><p>zip函数人如其名，是打包或者解包的函数，接受2个以上可迭代变量，输出对应位置组成元组后的迭代类型。例如：</p>
+<pre><code class="hljs python">a = [<span class="hljs-string">'a'</span>, <span class="hljs-string">'b'</span>, <span class="hljs-string">'c'</span>]
+b = (<span class="hljs-number">4</span>, <span class="hljs-number">5</span>, <span class="hljs-number">6</span>)
+zip(a,b)
+<span class="hljs-comment"># &lt;zip at 0x1da016d15c8&gt;</span>
+
+list(zip(a,b))
+<span class="hljs-comment"># [('a', 4), ('b', 5), ('c', 6)]</span>
+
+tuple(zip(a,b))
+<span class="hljs-comment"># (('a', 4), ('b', 5), ('c', 6))</span></code></pre>
+
+<p>也可以接受多于2个输入可迭代变量，而且如果各迭代变量长度不一致也不会报错，只是此时返回迭代变量取决于输入总长度最短的一个。例如：</p>
+<pre><code class="hljs python">a = [<span class="hljs-string">'a'</span>, <span class="hljs-string">'b'</span>, <span class="hljs-string">'c'</span>, <span class="hljs-string">'d'</span>, <span class="hljs-string">'e'</span>]
+b = (<span class="hljs-number">4</span>, <span class="hljs-number">5</span>, <span class="hljs-number">6</span>, <span class="hljs-number">7</span>)
+c = [<span class="hljs-literal">True</span>, <span class="hljs-literal">False</span>, <span class="hljs-literal">True</span>]
+list(zip(a,b,c))
+
+<span class="hljs-comment"># (('a', 4, True), ('b', 5, False), ('c', 6, True))</span></code></pre>
+
+<p>与zip打包相对应的用法是解包，即对一个打包形式的元素进行依次解包，并返回多个新的列表。例如：</p>
+<pre><code class="hljs python">aZip = ((<span class="hljs-string">'a'</span>, <span class="hljs-number">4</span>, <span class="hljs-literal">True</span>), (<span class="hljs-string">'b'</span>, <span class="hljs-number">5</span>, <span class="hljs-literal">False</span>), (<span class="hljs-string">'c'</span>, <span class="hljs-number">6</span>, <span class="hljs-literal">True</span>))
+a, b, c = zip(*aZip)
+
+<span class="hljs-comment"># a:('a', 'b', 'c')</span>
+<span class="hljs-comment"># b:(4, 5, 6)</span>
+<span class="hljs-comment"># c:(True, False, True)</span></code></pre>
+
+<h4 id="一一映射：map"><a href="#一一映射：map" class="headerlink" title="一一映射：map"></a>一一映射：map</h4><p>map函数也正如其取名一样，是一个将接受的迭代变量依次经过某种映射，并输出映射后的迭代变量。例如，如果对列表中的某个变量依次完成求值，并返回一个新的列表，则可以应用map：</p>
+<pre><code class="hljs python">a = [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>]
+map(str, a)
+<span class="hljs-comment"># &lt;map at 0x1da017136d8&gt;</span>
+
+list(map(str, a))
+<span class="hljs-comment"># ['1', '2', '3', '4']</span></code></pre>
+
+<p>这是map函数的一个典型用法：接受2个参数，第一个参数(上例中是str()函数）是一个要作用的函数，第二个参数是可迭代变量。</p>
+<p>当第一个函数的参数是是一个多变量函数时，map也可以接受更多的参数。例如：</p>
+<pre><code class="hljs python">a = [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>]
+b = [<span class="hljs-number">2</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">3</span>]
+
+list(map(<span class="hljs-keyword">lambda</span> x, y:x**y, a, b))
+<span class="hljs-comment"># [1, 4, 27, 64]</span></code></pre>
+
+<p>与zip函数中类似，当map里的函数参数长度不匹配时并不会报错，只是输出结果将由最短的决定：</p>
+<pre><code class="hljs python">a = [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>]
+b = [<span class="hljs-number">2</span>, <span class="hljs-number">2</span>]
+
+list(map(<span class="hljs-keyword">lambda</span> x, y:x**y, a, b))
+<span class="hljs-comment"># [1, 4]</span></code></pre>
+
+<h4 id="一夫当关：filter"><a href="#一夫当关：filter" class="headerlink" title="一夫当关：filter"></a>一夫当关：filter</h4><p>与map函数类似，filter函数也接受一个函数及其变量作为参数，只是要求这个函数的返回结果是bool型，并用这个bool的结果决定输出的取舍问题。例如需要对一个输入列表过滤，要求保留3的倍数：</p>
+<pre><code class="hljs python">a = range(<span class="hljs-number">10</span>)
+filter(<span class="hljs-keyword">lambda</span> x:x%<span class="hljs-number">3</span>==<span class="hljs-number">0</span>, a)
+<span class="hljs-comment"># &lt;filter at 0x1da0171c0f0&gt;</span>
+
+list(filter(<span class="hljs-keyword">lambda</span> x:x%<span class="hljs-number">3</span>==<span class="hljs-number">0</span>, a))
+<span class="hljs-comment"># [0, 3, 6, 9]</span></code></pre>
+
+<p>这里需注意，当filter的第一个函数返回值不是bool型时不会报错，只是它会转化为bool型判断，如果判断结果不是False（python中会判为False的变量包括0、None、[]等等），则会将其输出，否则过滤掉：</p>
+<pre><code class="hljs python">a = range(<span class="hljs-number">10</span>)
+list(filter(<span class="hljs-keyword">lambda</span> x:x%<span class="hljs-number">3</span>, a))
+<span class="hljs-comment"># [1, 2, 4, 5, 7, 8]</span></code></pre>
+
+<h4 id="万剑归宗：reduce"><a href="#万剑归宗：reduce" class="headerlink" title="万剑归宗：reduce"></a>万剑归宗：reduce</h4><p>map和filter函数都是多入多出型，实质上是完成了特定的变换或筛选。reduce则是归约函数，将一系列输入变量经过特定的函数后转化为一个结果输出。不过可能是由于应用场景有限的原因，reduce在python3中已不再是全局调用函数，必须要从functools包中导入方可使用：</p>
+<pre><code class="hljs python"><span class="hljs-keyword">from</span> functools <span class="hljs-keyword">import</span> reduce
+a = range(<span class="hljs-number">5</span>)
+reduce(<span class="hljs-keyword">lambda</span> x, y: x+y, a)
+<span class="hljs-comment"># 10</span></code></pre>
+
+<p>reduce函数还可以接受一个可选的初始值作为参数。应用reduce函数可以实现很多小trick，就看能不能想的到用的出：</p>
+<pre><code class="hljs python"><span class="hljs-keyword">from</span> functools <span class="hljs-keyword">import</span> reduce
+s = <span class="hljs-string">'abcdefg'</span>
+
+reduce(<span class="hljs-keyword">lambda</span> x, y: y+x, s, <span class="hljs-string">'AA'</span>)
+<span class="hljs-comment"># 'gfedcbaAA'</span></code></pre>
+
+<h4 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h4><p>当然，尽管几个函数用法不可谓不优美、功能不可谓不强大，但都不是必须的，甚至某种程度上都可以用其他形式加以替代，例如map和filter函数都可以用列表推导式来简单实现，reduce函数功能也顶多用一个for循环迭代就能解决。</p>
 
             </article>
             <hr>
             <div>
               <div class="post-metas mb-3">
                 
-                  <div class="post-meta mr-3">
-                    <i class="iconfont icon-category"></i>
-                    
-                      <a class="hover-with-bg" href="/categories/%E6%95%B0%E6%8D%AE%E6%8C%96%E6%8E%98/">数据挖掘</a>
-                    
-                  </div>
-                
                 
                   <div class="post-meta">
                     <i class="iconfont icon-tags"></i>
                     
-                      <a class="hover-with-bg" href="/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>
+                      <a class="hover-with-bg" href="/tags/python/">python</a>
                     
                   </div>
                 
@@ -350,9 +311,9 @@ print(<span class="hljs-string">'XGB predict over'</span>)</code></pre>
                   <div class="post-prev col-6">
                     
                     
-                      <a href="/2020/05/23/undefined/">
+                      <a href="/2020/05/27/undefined/">
                         <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">机器学习的5种采样方法</span>
+                        <span class="hidden-mobile">Pdpipe库的使用和实战</span>
                         <span class="visible-mobile">上一篇</span>
                       </a>
                     
@@ -360,8 +321,8 @@ print(<span class="hljs-string">'XGB predict over'</span>)</code></pre>
                   <div class="post-next col-6">
                     
                     
-                      <a href="/2019/05/21/undefined/">
-                        <span class="hidden-mobile">连续特征处理</span>
+                      <a href="/2020/05/24/undefined/">
+                        <span class="hidden-mobile">Python 10个习惯用法</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
@@ -585,7 +546,7 @@ print(<span class="hljs-string">'XGB predict over'</span>)</code></pre>
     var typed = new Typed('#subtitle', {
       strings: [
         '  ',
-        "模型融合&nbsp;",
+        "python内置的小函数&nbsp;",
       ],
       cursorChar: "_",
       typeSpeed: 70,
