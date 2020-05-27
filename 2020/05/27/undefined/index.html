@@ -17,7 +17,7 @@
   <meta name="description" content="坚持分享知识，坚持留言支持">
   <meta name="author" content="WeiChenLong">
   <meta name="keywords" content="Python 机器学习 深度学习">
-  <title>开篇 - WeiChenLong&#39;s Blog</title>
+  <title>Pdpipe库的使用和实战 - WeiChenLong&#39;s Blog</title>
 
   <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
 <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
@@ -132,8 +132,8 @@
               
                 <div class="mt-3 post-meta">
                   <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-                  <time datetime="2020-05-25 15:20">
-                    2020年5月25日 下午
+                  <time datetime="2020-05-27 18:47">
+                    2020年5月27日 晚上
                   </time>
                 </div>
               
@@ -143,7 +143,7 @@
                   
                   <span class="post-meta mr-2">
                     <i class="iconfont icon-chart"></i>
-                    12 字
+                    715 字
                   </span>
                 
 
@@ -153,7 +153,7 @@
                       <i class="iconfont icon-clock-fill"></i>
                     
                     
-                    1
+                    8
                      分钟
                   </span>
                 
@@ -182,13 +182,67 @@
           <div class="post-content mx-auto" id="post">
             
             <article class="markdown-body">
-              <p>新建博客太难了，终于完成了。</p>
+              <h3 id="Pdpipe初识"><a href="#Pdpipe初识" class="headerlink" title="Pdpipe初识"></a>Pdpipe初识</h3><p>“在<a href="https://pdpipe.github.io/pdpipe/doc/pdpipe/#pdpipe" target="_blank" rel="noopener"><code>pdpipe</code></a>Python包为构建简洁的界面<code>pandas</code> 是有先决条件，是冗长的管线，支持scikit学习变压器的装修改造设计，具有很强的可序列化。<a href="https://pdpipe.github.io/pdpipe/doc/pdpipe/#pdpipe" target="_blank" rel="noopener"><code>pdpipe</code></a> 管道具有简单的界面，提供有关管道应用程序的信息和错误信息，支持管道算术，并使混合类型数据的处理更加容易。”   这是官方文档的解释，我个人认为pdpipe在处理生成特征变量方面确实很方便。</p>
+<h4 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h4><p>win10的Anaconda(推荐)环境下就可以。打开命令行输入：</p>
+<pre><code class="hljs python">pip install pdpipe</code></pre>
+
+<p>pdpipe的一些模块需要scikit-learn和nltk库的支持，如果没有，pdpipe则会警告，提示你需要安装。</p>
+<h4 id="实战学习"><a href="#实战学习" class="headerlink" title="实战学习"></a>实战学习</h4><p>我们的数据集是汽车行驶信息，如下图：</p>
+<p><img src="/img/Snipaste_2020-05-27_19-05-27.png" srcset="/img/loading.gif" alt="Snipaste_2020-05-27_19-05-27"></p>
+<h5 id="读取代码："><a href="#读取代码：" class="headerlink" title="读取代码："></a>读取代码：</h5><pre><code class="hljs python">df = pd.read_csv(<span class="hljs-string">'./data.csv'</span>,nrows=<span class="hljs-number">100000</span>,encoding=<span class="hljs-string">'gbk'</span>)  <span class="hljs-comment">#读取数据</span>
+df.columns = [<span class="hljs-string">'字段'</span>+str(i) <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> range(<span class="hljs-number">1</span>,<span class="hljs-number">14</span>)]   <span class="hljs-comment">#设置列名</span>
+df = df.drop([<span class="hljs-string">'字段5'</span>,<span class="hljs-string">'字段12'</span>], axis=<span class="hljs-number">1</span>)  <span class="hljs-comment">#删除无用变量</span></code></pre>
+
+<p>这里需要说的一点是read_csv里的nrows参数，含义是指定读取文件的前n行，我这里n取10w，减少计算时间。</p>
+<h5 id="数据描述："><a href="#数据描述：" class="headerlink" title="数据描述："></a>数据描述：</h5><p>字段1为id，字段3为车牌，字段4为车牌颜色，日期为时间戳，字段11和字段13为路口编码。</p>
+<h4 id="一、清理数据"><a href="#一、清理数据" class="headerlink" title="一、清理数据"></a>一、清理数据</h4><p>使用pdpipe下的<a href="https://pdpipe.github.io/pdpipe/doc/pdpipe/basic_stages.html" target="_blank" rel="noopener">basic_stages</a>模块，该模块主要是做数据清洗。</p>
+<ol>
+<li>删除掉字段2为99、16、23、31、32的行数据</li>
+<li>删除字段3不是车牌的行数据</li>
+<li>删除掉字段3只出现过一次的行数据</li>
+<li>将日期转化为时间戳</li>
+</ol>
+<p><img src="/img/carbon.png" srcset="/img/loading.gif" alt="carbon"></p>
+<p>其中调用的函数：</p>
+<p><img src="/img/match.png" srcset="/img/loading.gif" alt="match"></p>
+<p>这里使用正则来配备车牌，调用re下的group(0)属性返回配备值，使用异常处理来避免不是车牌的情况下配备值不存在。</p>
+<h4 id="二、处理特征"><a href="#二、处理特征" class="headerlink" title="二、处理特征"></a>二、处理特征</h4><p>使用pdpipe下的<a href="https://pdpipe.github.io/pdpipe/doc/pdpipe/col_generation.html" target="_blank" rel="noopener">col_generation</a>模块，该模块使用函数来生成新的变量。</p>
+<p>将剩下的数据按照字段3相同（同一车牌）的时间顺序排列。使用groupby函数按照字段3聚合，然后对每个group排序。</p>
+<pre><code class="hljs python">data1 = data.groupby(<span class="hljs-string">'字段3'</span>).apply(<span class="hljs-keyword">lambda</span> x: x.sort_values(<span class="hljs-string">'日期'</span>))
+data1.index = data.index</code></pre>
+
+<p>然后开始处理：</p>
+<ol>
+<li>前后相邻两行记录时间差小于30min，则删除靠后一条的行数据</li>
+<li>前后相邻两行记录的字段13相同，则删除靠前的行数据</li>
+<li>若最后同一车牌下只剩一个行数据，则删除</li>
+</ol>
+<p><img src="/img/2.png" srcset="/img/loading.gif" alt="2"></p>
+<p>函数模块：</p>
+<p><img src="/img/1.png" srcset="/img/loading.gif" alt="1"></p>
+<h4 id="三、小知识点"><a href="#三、小知识点" class="headerlink" title="三、小知识点"></a>三、小知识点</h4><p>groupby函数下，可以对每个group操作，group可以和dataframe一样处理。</p>
+<pre><code class="hljs python">groupby(<span class="hljs-string">'字段3'</span>).apply(<span class="hljs-keyword">lambda</span> j: j[<span class="hljs-string">'字段13'</span>].iloc[<span class="hljs-number">0</span>])   <span class="hljs-comment">#取出每个group的第一行</span></code></pre>
+
+<pre><code class="hljs python"><span class="hljs-comment">#对每个group应用函数，还可以实时操作</span>
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">f4</span><span class="hljs-params">(x)</span>:</span>
+    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> range(len(x)):
+        x[<span class="hljs-string">'OD'</span>].iloc[i] = x[<span class="hljs-string">'字段11'</span>].iloc[i][i]
+    <span class="hljs-keyword">return</span> x
+x.groupby(<span class="hljs-string">'字段3'</span>).apply(<span class="hljs-keyword">lambda</span> j: f4(j))</code></pre>
+
 
             </article>
             <hr>
             <div>
               <div class="post-metas mb-3">
                 
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/python%E7%BB%83%E4%B9%A0/">python练习</a>
+                    
+                  </div>
                 
               </div>
               
@@ -199,15 +253,15 @@
                   <div class="post-prev col-6">
                     
                     
-                      <a href="/2020/05/27/undefined/">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">Pdpipe库的使用和实战</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </div>
                   <div class="post-next col-6">
                     
+                    
+                      <a href="/2020/05/25/undefined/">
+                        <span class="hidden-mobile">开篇</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
                     
                   </div>
                 </div>
@@ -344,7 +398,7 @@
     var typed = new Typed('#subtitle', {
       strings: [
         '  ',
-        "开篇&nbsp;",
+        "Pdpipe库的使用和实战&nbsp;",
       ],
       cursorChar: "_",
       typeSpeed: 70,
