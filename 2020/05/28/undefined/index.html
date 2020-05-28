@@ -17,7 +17,7 @@
   <meta name="description" content="坚持分享知识，坚持留言支持">
   <meta name="author" content="WeiChenLong">
   <meta name="keywords" content="Python 机器学习 深度学习">
-  <title>Pdpipe库的使用和实战 - WeiChenLong&#39;s Blog</title>
+  <title>自动特征编码 - WeiChenLong&#39;s Blog</title>
 
   <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
 <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
@@ -132,8 +132,8 @@
               
                 <div class="mt-3 post-meta">
                   <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-                  <time datetime="2020-05-27 18:47">
-                    2020年5月27日 晚上
+                  <time datetime="2020-05-28 19:37">
+                    2020年5月28日 晚上
                   </time>
                 </div>
               
@@ -143,7 +143,7 @@
                   
                   <span class="post-meta mr-2">
                     <i class="iconfont icon-chart"></i>
-                    715 字
+                    731 字
                   </span>
                 
 
@@ -153,7 +153,7 @@
                       <i class="iconfont icon-clock-fill"></i>
                     
                     
-                    10
+                    11
                      分钟
                   </span>
                 
@@ -189,65 +189,85 @@
           <div class="post-content mx-auto" id="post">
             
             <article class="markdown-body">
-              <h3 id="Pdpipe初识"><a href="#Pdpipe初识" class="headerlink" title="Pdpipe初识"></a>Pdpipe初识</h3><p>“在<a href="https://pdpipe.github.io/pdpipe/doc/pdpipe/#pdpipe" target="_blank" rel="noopener"><code>pdpipe</code></a>Python包为构建简洁的界面<code>pandas</code> 是有先决条件，是冗长的管线，支持scikit学习变压器的装修改造设计，具有很强的可序列化。<a href="https://pdpipe.github.io/pdpipe/doc/pdpipe/#pdpipe" target="_blank" rel="noopener"><code>pdpipe</code></a> 管道具有简单的界面，提供有关管道应用程序的信息和错误信息，支持管道算术，并使混合类型数据的处理更加容易。”   这是官方文档的解释，我个人认为pdpipe在处理生成特征变量方面确实很方便。</p>
-<h4 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h4><p>win10的Anaconda(推荐)环境下就可以。打开命令行输入：</p>
-<pre><code class="hljs python">pip install pdpipe</code></pre>
+              <h2 id="类别编码—Category-Encoders"><a href="#类别编码—Category-Encoders" class="headerlink" title="类别编码—Category Encoders"></a>类别编码—Category Encoders</h2><p>一组scikit-learn-style转换器，用于使用不同的技术将分类变量编码为数字。 在现有的scikit-learn版本中，序数编码，一键编码和哈希编码具有相似的等效项，但该库中的转换器都共享一些有用的属性：</p>
+<ul>
+<li>对pandas dataframes的一流支持，可作为输入（也可以作为输出）</li>
+<li>可以显式配置按名称或索引对数据中的哪些列进行编码，或者不管输入类型如何，推断非数字列</li>
+<li>可以基于训练集随意删除方差非常低的任何列</li>
+<li>可移植性:对转换器进行数据培训，对其进行pickle，然后重用它，最后得到相同的结果</li>
+<li>与sklearn完全兼容，像其他任何转换器一样输入类似数组的数据集</li>
+</ul>
+<p>安装：</p>
+<pre><code class="hljs plain">pip install category_encoders</code></pre>
 
-<p>pdpipe的一些模块需要scikit-learn和nltk库的支持，如果没有，pdpipe则会警告，提示你需要安装。</p>
-<h4 id="实战学习"><a href="#实战学习" class="headerlink" title="实战学习"></a>实战学习</h4><p>我们的数据集是汽车行驶信息，如下图：</p>
-<p><img src="/img/Snipaste_2020-05-27_19-05-27.png" srcset="/img/loading.gif" alt="Snipaste_2020-05-27_19-05-27"></p>
-<h5 id="读取代码："><a href="#读取代码：" class="headerlink" title="读取代码："></a>读取代码：</h5><pre><code class="hljs python">df = pd.read_csv(<span class="hljs-string">'./data.csv'</span>,nrows=<span class="hljs-number">100000</span>,encoding=<span class="hljs-string">'gbk'</span>)  <span class="hljs-comment">#读取数据</span>
-df.columns = [<span class="hljs-string">'字段'</span>+str(i) <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> range(<span class="hljs-number">1</span>,<span class="hljs-number">14</span>)]   <span class="hljs-comment">#设置列名</span>
-df = df.drop([<span class="hljs-string">'字段5'</span>,<span class="hljs-string">'字段12'</span>], axis=<span class="hljs-number">1</span>)  <span class="hljs-comment">#删除无用变量</span></code></pre>
+<p>导入包：</p>
+<pre><code class="hljs python"><span class="hljs-keyword">import</span> category_encoders <span class="hljs-keyword">as</span> ce</code></pre>
 
-<p>这里需要说的一点是read_csv里的nrows参数，含义是指定读取文件的前n行，我这里n取10w，减少计算时间。</p>
-<h5 id="数据描述："><a href="#数据描述：" class="headerlink" title="数据描述："></a>数据描述：</h5><p>字段1为id，字段3为车牌，字段4为车牌颜色，日期为时间戳，字段11和字段13为路口编码。</p>
-<h4 id="一、清理数据"><a href="#一、清理数据" class="headerlink" title="一、清理数据"></a>一、清理数据</h4><p>使用pdpipe下的<a href="https://pdpipe.github.io/pdpipe/doc/pdpipe/basic_stages.html" target="_blank" rel="noopener">basic_stages</a>模块，该模块主要是做数据清洗。</p>
-<ol>
-<li>删除掉字段2为99、16、23、31、32的行数据</li>
-<li>删除字段3不是车牌的行数据</li>
-<li>删除掉字段3只出现过一次的行数据</li>
-<li>将日期转化为时间戳</li>
-</ol>
-<p><img src="/img/carbon.png" srcset="/img/loading.gif" alt="carbon"></p>
-<p>其中调用的函数：</p>
-<p><img src="/img/match.png" srcset="/img/loading.gif" alt="match"></p>
-<p>这里使用正则来配备车牌，调用re下的group(0)属性返回配备值，使用异常处理来避免不是车牌的情况下配备值不存在。</p>
-<h4 id="二、处理特征"><a href="#二、处理特征" class="headerlink" title="二、处理特征"></a>二、处理特征</h4><p>使用pdpipe下的<a href="https://pdpipe.github.io/pdpipe/doc/pdpipe/col_generation.html" target="_blank" rel="noopener">col_generation</a>模块，该模块使用函数来生成新的变量。</p>
-<p>将剩下的数据按照字段3相同（同一车牌）的时间顺序排列。使用groupby函数按照字段3聚合，然后对每个group排序。</p>
-<pre><code class="hljs python">data1 = data.groupby(<span class="hljs-string">'字段3'</span>).apply(<span class="hljs-keyword">lambda</span> x: x.sort_values(<span class="hljs-string">'日期'</span>))
-data1.index = data.index</code></pre>
+<p>需要注意的参数：handle_unknown和handle_missing</p>
+<p>在目标编码中，handle_unknown 和 handle_missing 仅接受 ‘error’, ‘return_nan’ 及 ‘value’ 设定<br>两者的默认值均为 ‘value’, 即对未知类别或缺失值填充训练集的因变量平均值</p>
+<h4 id="Label-Encoder-Ordinal"><a href="#Label-Encoder-Ordinal" class="headerlink" title="Label Encoder (Ordinal)"></a>Label Encoder (<a href="http://contrib.scikit-learn.org/category_encoders/ordinal.html" target="_blank" rel="noopener">Ordinal</a>)</h4><pre><code class="hljs python">encoder = ce.OrdinalEncoder(feature_list,handle_unknown=<span class="hljs-string">'value'</span>,handle_missing=<span class="hljs-string">'value'</span>) 
+train_le = encoder.fit_transform(train)  <span class="hljs-comment">#训练数据,fit，然后对其进行转换</span>
+test_le = encoder.transform(test)    <span class="hljs-comment">#编码到test数据</span></code></pre>
 
-<p>然后开始处理：</p>
-<ol>
-<li>前后相邻两行记录时间差小于30min，则删除靠后一条的行数据</li>
-<li>前后相邻两行记录的字段13相同，则删除靠前的行数据</li>
-<li>若最后同一车牌下只剩一个行数据，则删除</li>
-</ol>
-<p><img src="/img/2.png" srcset="/img/loading.gif" alt="2"></p>
-<p>函数模块：</p>
-<p><img src="/img/1.png" srcset="/img/loading.gif" alt="1"></p>
-<h4 id="三、小知识点"><a href="#三、小知识点" class="headerlink" title="三、小知识点"></a>三、小知识点</h4><p>groupby函数下，可以对每个group操作，group可以和dataframe一样处理。</p>
-<pre><code class="hljs python">groupby(<span class="hljs-string">'字段3'</span>).apply(<span class="hljs-keyword">lambda</span> j: j[<span class="hljs-string">'字段13'</span>].iloc[<span class="hljs-number">0</span>])   <span class="hljs-comment">#取出每个group的第一行</span></code></pre>
+<h4 id="One-Hot-Encoder-One-Hot"><a href="#One-Hot-Encoder-One-Hot" class="headerlink" title="One-Hot Encoder(One Hot)"></a>One-Hot Encoder(<a href="http://contrib.scikit-learn.org/category_encoders/onehot.html" target="_blank" rel="noopener">One Hot</a>)</h4><p>一个编码分类特征的编码，每个分类产生一个特征，每个二进制。</p>
+<pre><code class="hljs python">OHE_encoder = ce.OneHotEncoder(feature_list)
+train_ohe = OHE_encoder.fit_transform(train)
+test_ohe = OHE_encoder.transform(test)</code></pre>
 
-<pre><code class="hljs python"><span class="hljs-comment">#对每个group应用函数，还可以实时操作</span>
-<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">f4</span><span class="hljs-params">(x)</span>:</span>
-    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> range(len(x)):
-        x[<span class="hljs-string">'OD'</span>].iloc[i] = x[<span class="hljs-string">'字段11'</span>].iloc[i][i]
-    <span class="hljs-keyword">return</span> x
-x.groupby(<span class="hljs-string">'字段3'</span>).apply(<span class="hljs-keyword">lambda</span> j: f4(j))</code></pre>
+<h4 id="Target-Encoder-Target-Encoder"><a href="#Target-Encoder-Target-Encoder" class="headerlink" title="Target Encoder(Target Encoder)"></a>Target Encoder(<a href="http://contrib.scikit-learn.org/category_encoders/targetencoder.html" target="_blank" rel="noopener">Target Encoder</a>)</h4><pre><code class="hljs python"><span class="hljs-comment">#筛选类别小于60的特征</span>
+feature_list = [i <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> data.columns <span class="hljs-keyword">if</span> len(set(data[i])) &lt; <span class="hljs-number">60</span> <span class="hljs-keyword">and</span> i != label]
+TE_encoder = ce.TargetEncoder(feature_list)
+train_te = TE_encoder.fit_transform(train[feature_list], target)
+test_te = TE_encoder.transform(test[feature_list])</code></pre>
 
+<h4 id="Weight-of-Evidence-Encoder-Weight-of-Evidence"><a href="#Weight-of-Evidence-Encoder-Weight-of-Evidence" class="headerlink" title="Weight of Evidence Encoder(Weight of Evidence)"></a>Weight of Evidence Encoder(<a href="http://contrib.scikit-learn.org/category_encoders/woe.html" target="_blank" rel="noopener">Weight of Evidence</a>)</h4><p>WOE是信用评分中常用的基于目标的编码器，WOE计算公式：</p>
+<p><img src="/img/woe.png" srcset="/img/loading.gif" alt="woe"></p>
+<p>其中Event%是每个类别中正样本占总样本比例。</p>
+<pre><code class="hljs python">WOE_encoder = ce.WOEEncoder()
+train_woe = WOE_encoder.fit_transform(train[feature_list], target)
+test_woe = WOE_encoder.transform(test[feature_list])</code></pre>
+
+<h4 id="James-Stein-Encoder-James-Stein-Encoder"><a href="#James-Stein-Encoder-James-Stein-Encoder" class="headerlink" title="James-Stein Encoder(James-Stein Encoder)"></a>James-Stein Encoder(<a href="http://contrib.scikit-learn.org/category_encoders/jamesstein.html" target="_blank" rel="noopener">James-Stein Encoder</a>)</h4><p>James-Stein编码也是一种基于目标编码的编码方法。与M估计量编码一样，James-Stein编码器也尝试通过参数B来平衡先验概率与观测到的条件概率。但与目标编码与M估计量编码不同的是，James-Stein编码器通过方差比而不是样本大小来平衡两个概率。</p>
+<pre><code class="hljs python">JSE_encoder = ce.JamesSteinEncoder()
+train_jse = JSE_encoder.fit_transform(train[feature_list], target)
+test_jse = JSE_encoder.transform(test[feature_list])</code></pre>
+
+<h4 id="Leave-one-out-Encoder-Leave-One-Out"><a href="#Leave-one-out-Encoder-Leave-One-Out" class="headerlink" title="Leave-one-out Encoder(Leave One Out)"></a>Leave-one-out Encoder(<a href="http://contrib.scikit-learn.org/category_encoders/leaveoneout.html" target="_blank" rel="noopener">Leave One Out</a>)</h4><p>留一法编码器通过组因变量均值对每个组进行编码，此处组指的是类别变量中的不同类别。</p>
+<pre><code class="hljs python">LOOE_encoder = ce.LeaveOneOutEncoder()
+train_looe = LOOE_encoder.fit_transform(train[feature_list], target)
+test_looe = LOOE_encoder.transform(test[feature_list])</code></pre>
+
+<h4 id="Catboost-Encoder-CatBoost-Encoder"><a href="#Catboost-Encoder-CatBoost-Encoder" class="headerlink" title="Catboost Encoder(CatBoost Encoder)"></a>Catboost Encoder(<a href="http://contrib.scikit-learn.org/category_encoders/catboost.html" target="_blank" rel="noopener">CatBoost Encoder</a>)</h4><pre><code class="hljs python">CBE_encoder = ce.CatBoostEncoder()
+train_cbe = CBE_encoder.fit_transform(train[feature_list], target)
+test_cbe = CBE_encoder.transform(test[feature_list])</code></pre>
+
+<h4 id="Helmert-Encoder-Helmert-Coding"><a href="#Helmert-Encoder-Helmert-Coding" class="headerlink" title="Helmert Encoder(Helmert Coding)"></a>Helmert Encoder(<a href="http://contrib.scikit-learn.org/category_encoders/helmert.html" target="_blank" rel="noopener">Helmert Coding</a>)</h4><pre><code class="hljs python">HE_encoder = ce.HelmertEncoder(feature_list)
+train_he = HE_encoder.fit_transform(train[feature_list], target)
+test_he = HE_encoder.transform(test[feature_list])</code></pre>
+
+<h4 id="Polynomial-Encoder-Polynomial-Coding"><a href="#Polynomial-Encoder-Polynomial-Coding" class="headerlink" title="Polynomial Encoder(Polynomial Coding)"></a>Polynomial Encoder(<a href="http://contrib.scikit-learn.org/category_encoders/polynomial.html" target="_blank" rel="noopener">Polynomial Coding</a>)</h4><pre><code class="hljs python">PE_encoder = ce.PolynomialEncoder(feature_list)
+train_pe = PE_encoder.fit_transform(train[feature_list], target)
+test_pe = PE_encoder.transform(test[feature_list])</code></pre>
+
+<p>以上编码在实战中都可以尝试，选择或者全部使用。</p>
 
             </article>
             <hr>
             <div>
               <div class="post-metas mb-3">
                 
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E6%95%B0%E6%8D%AE%E6%8C%96%E6%8E%98/">数据挖掘</a>
+                    
+                  </div>
+                
                 
                   <div class="post-meta">
                     <i class="iconfont icon-tags"></i>
                     
-                      <a class="hover-with-bg" href="/tags/python%E7%BB%83%E4%B9%A0/">python练习</a>
+                      <a class="hover-with-bg" href="/tags/%E7%89%B9%E5%BE%81%E5%B7%A5%E7%A8%8B/">特征工程</a>
                     
                   </div>
                 
@@ -260,18 +280,12 @@ x.groupby(<span class="hljs-string">'字段3'</span>).apply(<span class="hljs-ke
                   <div class="post-prev col-6">
                     
                     
-                      <a href="/2020/05/28/undefined/">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">自动特征编码</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </div>
                   <div class="post-next col-6">
                     
                     
-                      <a href="/2020/05/25/undefined/">
-                        <span class="hidden-mobile">开篇</span>
+                      <a href="/2020/05/27/undefined/">
+                        <span class="hidden-mobile">Pdpipe库的使用和实战</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
@@ -495,7 +509,7 @@ x.groupby(<span class="hljs-string">'字段3'</span>).apply(<span class="hljs-ke
     var typed = new Typed('#subtitle', {
       strings: [
         '  ',
-        "Pdpipe库的使用和实战&nbsp;",
+        "自动特征编码&nbsp;",
       ],
       cursorChar: "_",
       typeSpeed: 70,
