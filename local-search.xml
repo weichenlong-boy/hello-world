@@ -4,6 +4,31 @@
   
   
   <entry>
+    <title>特征降维</title>
+    <link href="/2020/05/29/undefined/"/>
+    <url>/2020/05/29/undefined/</url>
+    
+    <content type="html"><![CDATA[<h2 id="特征降维"><a href="#特征降维" class="headerlink" title="特征降维"></a>特征降维</h2><h4 id="为什么要降维"><a href="#为什么要降维" class="headerlink" title="为什么要降维"></a>为什么要降维</h4><ul><li>找到宏观信息</li><li>找到交叉效应</li><li>减少，防止过拟合</li><li>不建议先降维后拟合模型(丢失部分特征信息)</li></ul><h4 id="常用的几种降维方法"><a href="#常用的几种降维方法" class="headerlink" title="常用的几种降维方法"></a>常用的几种降维方法</h4><h5 id="PCA"><a href="#PCA" class="headerlink" title="PCA"></a>PCA</h5><p>API <a href="https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html#" target="_blank" rel="noopener"><code>sklearn.decomposition</code>.PCA</a></p><p>设有 m 条 n 维数据</p><ul><li>将原始数据按列组成 n 行 m 列矩阵 X</li><li>将 X 的每一行进行零均值化，即减去这一行的均值(标准化或者归一化，消除量纲不一致问题)</li><li>求出协方差矩阵 </li><li>求出协方差矩阵的特征值及对应的特征向量</li><li>将特征向量按对应特征值大小从上到下按行排列成矩阵，取前 k 行组成矩阵 P</li><li>Y = PX 即为降维到 k 维后的数据</li></ul><p>然而实际上，当样本维度很高时，协方差矩阵计算太慢，方针特征值分解计算效率不高，所以PCA经常是使用SVD(奇异值分解)进行求解，具体可看API里面的参数<strong>svd_solver</strong></p><pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.decomposition <span class="hljs-keyword">import</span> PCAX = np.array([[<span class="hljs-number">-1</span>, <span class="hljs-number">-1</span>], [<span class="hljs-number">-2</span>, <span class="hljs-number">-1</span>], [<span class="hljs-number">-3</span>, <span class="hljs-number">-2</span>], [<span class="hljs-number">1</span>, <span class="hljs-number">1</span>], [<span class="hljs-number">2</span>, <span class="hljs-number">1</span>], [<span class="hljs-number">3</span>, <span class="hljs-number">2</span>]])pca = PCA(n_components=<span class="hljs-number">2</span>)   <span class="hljs-comment">#隐变量个数，可变参数</span>pca.fit(X)result = pca.transform(X)</code></pre><h5 id="SVD"><a href="#SVD" class="headerlink" title="SVD"></a>SVD</h5><p>上面已经解释过。API <a href="https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html?highlight=svd#" target="_blank" rel="noopener"><code>sklearn.decomposition</code>.TruncatedSVD</a></p><pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.decomposition <span class="hljs-keyword">import</span> TruncatedSVDsvd = TruncatedSVD(n_components=<span class="hljs-number">5</span>, n_iter=<span class="hljs-number">7</span>, random_state=<span class="hljs-number">42</span>)  <span class="hljs-comment">#可变参数</span>svd.fit(X)result = svd.transform(X)</code></pre><p>对于密集数据使用PCA，对于稀疏数据使用TruncatedSVD</p><h5 id="TSNE"><a href="#TSNE" class="headerlink" title="TSNE"></a>TSNE</h5><p>t分布随机邻接嵌入。API <a href="https://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html?highlight=tsne#" target="_blank" rel="noopener"><code>sklearn.manifold</code>.TSNE</a></p><pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.manifold <span class="hljs-keyword">import</span> TSNEX_embedded = TSNE(n_components=<span class="hljs-number">2</span>,perplexity=<span class="hljs-number">30.0</span>).fit_transform(X)<span class="hljs-comment">#tSNE中重要的参数是n_components和perplexity</span></code></pre><h5 id="NMF"><a href="#NMF" class="headerlink" title="NMF"></a>NMF</h5><p>找到两个非负矩阵(W, H)，它们的乘积近似于非负矩阵x。这种分解可以用于降维、源分离或主题提取。</p><p>API <a href="https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.NMF.html#" target="_blank" rel="noopener"><code>sklearn.decomposition</code>.NMF</a></p><pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.decomposition <span class="hljs-keyword">import</span> NMFmodel = NMF(n_components=<span class="hljs-number">2</span>, init=<span class="hljs-string">'random'</span>, random_state=<span class="hljs-number">0</span>)W = model.fit_transform(X)</code></pre><p>以上是常用的几种降维方法，还有其他的方法请读者自己学习。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>数据挖掘</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>特征工程</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>自动特征编码</title>
     <link href="/2020/05/28/undefined/"/>
     <url>/2020/05/28/undefined/</url>

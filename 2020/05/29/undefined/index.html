@@ -17,7 +17,7 @@
   <meta name="description" content="坚持分享知识，坚持留言支持">
   <meta name="author" content="WeiChenLong">
   <meta name="keywords" content="Python 机器学习 深度学习">
-  <title>自动特征编码 - WeiChenLong&#39;s Blog</title>
+  <title>特征降维 - WeiChenLong&#39;s Blog</title>
 
   <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
 <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
@@ -132,8 +132,8 @@
               
                 <div class="mt-3 post-meta">
                   <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-                  <time datetime="2020-05-28 19:37">
-                    2020年5月28日 晚上
+                  <time datetime="2020-05-29 11:47">
+                    2020年5月29日 中午
                   </time>
                 </div>
               
@@ -143,7 +143,7 @@
                   
                   <span class="post-meta mr-2">
                     <i class="iconfont icon-chart"></i>
-                    731 字
+                    476 字
                   </span>
                 
 
@@ -153,7 +153,7 @@
                       <i class="iconfont icon-clock-fill"></i>
                     
                     
-                    11
+                    7
                      分钟
                   </span>
                 
@@ -189,67 +189,48 @@
           <div class="post-content mx-auto" id="post">
             
             <article class="markdown-body">
-              <h2 id="类别编码—Category-Encoders"><a href="#类别编码—Category-Encoders" class="headerlink" title="类别编码—Category Encoders"></a>类别编码—Category Encoders</h2><p>一组scikit-learn-style转换器，用于使用不同的技术将分类变量编码为数字。 在现有的scikit-learn版本中，序数编码，一键编码和哈希编码具有相似的等效项，但该库中的转换器都共享一些有用的属性：</p>
-<ul>
-<li>对pandas dataframes的一流支持，可作为输入（也可以作为输出）</li>
-<li>可以显式配置按名称或索引对数据中的哪些列进行编码，或者不管输入类型如何，推断非数字列</li>
-<li>可以基于训练集随意删除方差非常低的任何列</li>
-<li>可移植性:对转换器进行数据培训，对其进行pickle，然后重用它，最后得到相同的结果</li>
-<li>与sklearn完全兼容，像其他任何转换器一样输入类似数组的数据集</li>
+              <h2 id="特征降维"><a href="#特征降维" class="headerlink" title="特征降维"></a>特征降维</h2><h4 id="为什么要降维"><a href="#为什么要降维" class="headerlink" title="为什么要降维"></a>为什么要降维</h4><ul>
+<li>找到宏观信息</li>
+<li>找到交叉效应</li>
+<li>减少，防止过拟合</li>
+<li>不建议先降维后拟合模型(丢失部分特征信息)</li>
 </ul>
-<p>安装：</p>
-<pre><code class="hljs plain">pip install category_encoders</code></pre>
+<h4 id="常用的几种降维方法"><a href="#常用的几种降维方法" class="headerlink" title="常用的几种降维方法"></a>常用的几种降维方法</h4><h5 id="PCA"><a href="#PCA" class="headerlink" title="PCA"></a>PCA</h5><p>API <a href="https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html#" target="_blank" rel="noopener"><code>sklearn.decomposition</code>.PCA</a></p>
+<p>设有 m 条 n 维数据</p>
+<ul>
+<li>将原始数据按列组成 n 行 m 列矩阵 X</li>
+<li>将 X 的每一行进行零均值化，即减去这一行的均值(标准化或者归一化，消除量纲不一致问题)</li>
+<li>求出协方差矩阵 </li>
+<li>求出协方差矩阵的特征值及对应的特征向量</li>
+<li>将特征向量按对应特征值大小从上到下按行排列成矩阵，取前 k 行组成矩阵 P</li>
+<li>Y = PX 即为降维到 k 维后的数据</li>
+</ul>
+<p>然而实际上，当样本维度很高时，协方差矩阵计算太慢，方针特征值分解计算效率不高，所以PCA经常是使用SVD(奇异值分解)进行求解，具体可看API里面的参数<strong>svd_solver</strong></p>
+<pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.decomposition <span class="hljs-keyword">import</span> PCA
+X = np.array([[<span class="hljs-number">-1</span>, <span class="hljs-number">-1</span>], [<span class="hljs-number">-2</span>, <span class="hljs-number">-1</span>], [<span class="hljs-number">-3</span>, <span class="hljs-number">-2</span>], [<span class="hljs-number">1</span>, <span class="hljs-number">1</span>], [<span class="hljs-number">2</span>, <span class="hljs-number">1</span>], [<span class="hljs-number">3</span>, <span class="hljs-number">2</span>]])
+pca = PCA(n_components=<span class="hljs-number">2</span>)   <span class="hljs-comment">#隐变量个数，可变参数</span>
+pca.fit(X)
+result = pca.transform(X)</code></pre>
 
-<p>导入包：</p>
-<pre><code class="hljs python"><span class="hljs-keyword">import</span> category_encoders <span class="hljs-keyword">as</span> ce</code></pre>
+<h5 id="SVD"><a href="#SVD" class="headerlink" title="SVD"></a>SVD</h5><p>上面已经解释过。API <a href="https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html?highlight=svd#" target="_blank" rel="noopener"><code>sklearn.decomposition</code>.TruncatedSVD</a></p>
+<pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.decomposition <span class="hljs-keyword">import</span> TruncatedSVD
+svd = TruncatedSVD(n_components=<span class="hljs-number">5</span>, n_iter=<span class="hljs-number">7</span>, random_state=<span class="hljs-number">42</span>)  <span class="hljs-comment">#可变参数</span>
+svd.fit(X)
+result = svd.transform(X)</code></pre>
 
-<p>需要注意的参数：handle_unknown和handle_missing</p>
-<p>在目标编码中，handle_unknown 和 handle_missing 仅接受 ‘error’, ‘return_nan’ 及 ‘value’ 设定<br>两者的默认值均为 ‘value’, 即对未知类别或缺失值填充训练集的因变量平均值</p>
-<h4 id="Label-Encoder-Ordinal"><a href="#Label-Encoder-Ordinal" class="headerlink" title="Label Encoder (Ordinal)"></a>Label Encoder (<a href="http://contrib.scikit-learn.org/category_encoders/ordinal.html" target="_blank" rel="noopener">Ordinal</a>)</h4><pre><code class="hljs python">encoder = ce.OrdinalEncoder(feature_list,handle_unknown=<span class="hljs-string">'value'</span>,handle_missing=<span class="hljs-string">'value'</span>) 
-train_le = encoder.fit_transform(train)  <span class="hljs-comment">#训练数据,fit，然后对其进行转换</span>
-test_le = encoder.transform(test)    <span class="hljs-comment">#编码到test数据</span></code></pre>
+<p>对于密集数据使用PCA，对于稀疏数据使用TruncatedSVD</p>
+<h5 id="TSNE"><a href="#TSNE" class="headerlink" title="TSNE"></a>TSNE</h5><p>t分布随机邻接嵌入。API <a href="https://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html?highlight=tsne#" target="_blank" rel="noopener"><code>sklearn.manifold</code>.TSNE</a></p>
+<pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.manifold <span class="hljs-keyword">import</span> TSNE
+X_embedded = TSNE(n_components=<span class="hljs-number">2</span>,perplexity=<span class="hljs-number">30.0</span>).fit_transform(X)
+<span class="hljs-comment">#tSNE中重要的参数是n_components和perplexity</span></code></pre>
 
-<h4 id="One-Hot-Encoder-One-Hot"><a href="#One-Hot-Encoder-One-Hot" class="headerlink" title="One-Hot Encoder(One Hot)"></a>One-Hot Encoder(<a href="http://contrib.scikit-learn.org/category_encoders/onehot.html" target="_blank" rel="noopener">One Hot</a>)</h4><p>一个编码分类特征的编码，每个分类产生一个特征，每个二进制。</p>
-<pre><code class="hljs python">OHE_encoder = ce.OneHotEncoder(feature_list)
-train_ohe = OHE_encoder.fit_transform(train)
-test_ohe = OHE_encoder.transform(test)</code></pre>
+<h5 id="NMF"><a href="#NMF" class="headerlink" title="NMF"></a>NMF</h5><p>找到两个非负矩阵(W, H)，它们的乘积近似于非负矩阵x。这种分解可以用于降维、源分离或主题提取。</p>
+<p>API <a href="https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.NMF.html#" target="_blank" rel="noopener"><code>sklearn.decomposition</code>.NMF</a></p>
+<pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.decomposition <span class="hljs-keyword">import</span> NMF
+model = NMF(n_components=<span class="hljs-number">2</span>, init=<span class="hljs-string">'random'</span>, random_state=<span class="hljs-number">0</span>)
+W = model.fit_transform(X)</code></pre>
 
-<h4 id="Target-Encoder-Target-Encoder"><a href="#Target-Encoder-Target-Encoder" class="headerlink" title="Target Encoder(Target Encoder)"></a>Target Encoder(<a href="http://contrib.scikit-learn.org/category_encoders/targetencoder.html" target="_blank" rel="noopener">Target Encoder</a>)</h4><pre><code class="hljs python"><span class="hljs-comment">#筛选类别小于60的特征</span>
-feature_list = [i <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> data.columns <span class="hljs-keyword">if</span> len(set(data[i])) &lt; <span class="hljs-number">60</span> <span class="hljs-keyword">and</span> i != label]
-TE_encoder = ce.TargetEncoder(feature_list)
-train_te = TE_encoder.fit_transform(train[feature_list], target)
-test_te = TE_encoder.transform(test[feature_list])</code></pre>
-
-<h4 id="Weight-of-Evidence-Encoder-Weight-of-Evidence"><a href="#Weight-of-Evidence-Encoder-Weight-of-Evidence" class="headerlink" title="Weight of Evidence Encoder(Weight of Evidence)"></a>Weight of Evidence Encoder(<a href="http://contrib.scikit-learn.org/category_encoders/woe.html" target="_blank" rel="noopener">Weight of Evidence</a>)</h4><p>WOE是信用评分中常用的基于目标的编码器，WOE计算公式：</p>
-<p><img src="/img/woe.png" srcset="/img/loading.gif" alt="woe"></p>
-<p>其中Event%是每个类别中正样本占总样本比例。</p>
-<pre><code class="hljs python">WOE_encoder = ce.WOEEncoder()
-train_woe = WOE_encoder.fit_transform(train[feature_list], target)
-test_woe = WOE_encoder.transform(test[feature_list])</code></pre>
-
-<h4 id="James-Stein-Encoder-James-Stein-Encoder"><a href="#James-Stein-Encoder-James-Stein-Encoder" class="headerlink" title="James-Stein Encoder(James-Stein Encoder)"></a>James-Stein Encoder(<a href="http://contrib.scikit-learn.org/category_encoders/jamesstein.html" target="_blank" rel="noopener">James-Stein Encoder</a>)</h4><p>James-Stein编码也是一种基于目标编码的编码方法。与M估计量编码一样，James-Stein编码器也尝试通过参数B来平衡先验概率与观测到的条件概率。但与目标编码与M估计量编码不同的是，James-Stein编码器通过方差比而不是样本大小来平衡两个概率。</p>
-<pre><code class="hljs python">JSE_encoder = ce.JamesSteinEncoder()
-train_jse = JSE_encoder.fit_transform(train[feature_list], target)
-test_jse = JSE_encoder.transform(test[feature_list])</code></pre>
-
-<h4 id="Leave-one-out-Encoder-Leave-One-Out"><a href="#Leave-one-out-Encoder-Leave-One-Out" class="headerlink" title="Leave-one-out Encoder(Leave One Out)"></a>Leave-one-out Encoder(<a href="http://contrib.scikit-learn.org/category_encoders/leaveoneout.html" target="_blank" rel="noopener">Leave One Out</a>)</h4><p>留一法编码器通过组因变量均值对每个组进行编码，此处组指的是类别变量中的不同类别。</p>
-<pre><code class="hljs python">LOOE_encoder = ce.LeaveOneOutEncoder()
-train_looe = LOOE_encoder.fit_transform(train[feature_list], target)
-test_looe = LOOE_encoder.transform(test[feature_list])</code></pre>
-
-<h4 id="Catboost-Encoder-CatBoost-Encoder"><a href="#Catboost-Encoder-CatBoost-Encoder" class="headerlink" title="Catboost Encoder(CatBoost Encoder)"></a>Catboost Encoder(<a href="http://contrib.scikit-learn.org/category_encoders/catboost.html" target="_blank" rel="noopener">CatBoost Encoder</a>)</h4><pre><code class="hljs python">CBE_encoder = ce.CatBoostEncoder()
-train_cbe = CBE_encoder.fit_transform(train[feature_list], target)
-test_cbe = CBE_encoder.transform(test[feature_list])</code></pre>
-
-<h4 id="Helmert-Encoder-Helmert-Coding"><a href="#Helmert-Encoder-Helmert-Coding" class="headerlink" title="Helmert Encoder(Helmert Coding)"></a>Helmert Encoder(<a href="http://contrib.scikit-learn.org/category_encoders/helmert.html" target="_blank" rel="noopener">Helmert Coding</a>)</h4><pre><code class="hljs python">HE_encoder = ce.HelmertEncoder(feature_list)
-train_he = HE_encoder.fit_transform(train[feature_list], target)
-test_he = HE_encoder.transform(test[feature_list])</code></pre>
-
-<h4 id="Polynomial-Encoder-Polynomial-Coding"><a href="#Polynomial-Encoder-Polynomial-Coding" class="headerlink" title="Polynomial Encoder(Polynomial Coding)"></a>Polynomial Encoder(<a href="http://contrib.scikit-learn.org/category_encoders/polynomial.html" target="_blank" rel="noopener">Polynomial Coding</a>)</h4><pre><code class="hljs python">PE_encoder = ce.PolynomialEncoder(feature_list)
-train_pe = PE_encoder.fit_transform(train[feature_list], target)
-test_pe = PE_encoder.transform(test[feature_list])</code></pre>
-
-<p>以上编码在实战中都可以尝试，选择或者全部使用。</p>
+<p>以上是常用的几种降维方法，还有其他的方法请读者自己学习。</p>
 
             </article>
             <hr>
@@ -280,18 +261,12 @@ test_pe = PE_encoder.transform(test[feature_list])</code></pre>
                   <div class="post-prev col-6">
                     
                     
-                      <a href="/2020/05/29/undefined/">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">特征降维</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </div>
                   <div class="post-next col-6">
                     
                     
-                      <a href="/2020/05/27/undefined/">
-                        <span class="hidden-mobile">Pdpipe库的使用和实战</span>
+                      <a href="/2020/05/28/undefined/">
+                        <span class="hidden-mobile">自动特征编码</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
@@ -515,7 +490,7 @@ test_pe = PE_encoder.transform(test[feature_list])</code></pre>
     var typed = new Typed('#subtitle', {
       strings: [
         '  ',
-        "自动特征编码&nbsp;",
+        "特征降维&nbsp;",
       ],
       cursorChar: "_",
       typeSpeed: 70,
