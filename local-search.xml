@@ -4,6 +4,19 @@
   
   
   <entry>
+    <title>贝叶斯优化调参</title>
+    <link href="/2020/05/31/undefined/"/>
+    <url>/2020/05/31/undefined/</url>
+    
+    <content type="html"><![CDATA[]]></content>
+    
+    
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>自动特征挖掘</title>
     <link href="/2020/05/30/undefined/"/>
     <url>/2020/05/30/undefined/</url>
@@ -90,6 +103,31 @@
     <tags>
       
       <tag>python练习</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>连续特征处理</title>
+    <link href="/2019/05/21/undefined/"/>
+    <url>/2019/05/21/undefined/</url>
+    
+    <content type="html"><![CDATA[<h2 id="连续特征离散化"><a href="#连续特征离散化" class="headerlink" title="连续特征离散化"></a>连续特征离散化</h2><h4 id="为什么要对连续变量进行离散化"><a href="#为什么要对连续变量进行离散化" class="headerlink" title="为什么要对连续变量进行离散化"></a>为什么要对连续变量进行离散化</h4><ul><li>捕捉非线性效应</li><li>方便捕捉交叉效应—groupby</li><li>可以减少过拟合的风险，因为分箱相当于对于数据去粗粒度描述</li><li>离散化后可以提升模型的鲁棒性</li></ul><h4 id="常见的离散化方法"><a href="#常见的离散化方法" class="headerlink" title="常见的离散化方法"></a>常见的离散化方法</h4><h5 id="分箱方法"><a href="#分箱方法" class="headerlink" title="分箱方法"></a>分箱方法</h5><p>等距分箱（<a href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.cut.html" target="_blank" rel="noopener">pandas.cut</a>）</p><pre><code class="hljs python">pd.cut(serise, [<span class="hljs-number">0</span>, <span class="hljs-number">2</span>, <span class="hljs-number">4</span>, <span class="hljs-number">6</span>, <span class="hljs-number">10</span>, <span class="hljs-number">10</span>], labels=<span class="hljs-literal">False</span>)  <span class="hljs-comment">#label指定标签</span></code></pre><p>等频分箱（<a href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.qcut.html" target="_blank" rel="noopener">pandas.qcut</a>）</p><pre><code class="hljs python">pd.qcut(range(<span class="hljs-number">5</span>), <span class="hljs-number">3</span>, labels=[<span class="hljs-string">"good"</span>, <span class="hljs-string">"medium"</span>, <span class="hljs-string">"bad"</span>])---[good, good, medium, bad, bad]</code></pre><h5 id="聚类（sklearn-preprocessing-KBinsDiscretizer）"><a href="#聚类（sklearn-preprocessing-KBinsDiscretizer）" class="headerlink" title="聚类（sklearn.preprocessing.KBinsDiscretizer）"></a>聚类（<a href="https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.KBinsDiscretizer.html?highlight=kbinsdiscretizer#" target="_blank" rel="noopener"><code>sklearn.preprocessing</code>.KBinsDiscretizer</a>）</h5><pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.preprocessing <span class="hljs-keyword">import</span> KBinsDiscretizerest = KBinsDiscretizer(n_bins=<span class="hljs-number">3</span>, encode=<span class="hljs-string">'ordinal'</span>, strategy=<span class="hljs-string">'kmeans'</span>)est.fit(X)Xt = est.transform(X)</code></pre><h5 id="基于树"><a href="#基于树" class="headerlink" title="基于树"></a>基于树</h5><p>下面用sklearn的api和sklearn的决策树简单做了一个基于cart tree的决策树分箱，实现了sklearn原生的cart tree和lgb以及xgb tree分箱的功能，参考<a href="https://zhuanlan.zhihu.com/p/68865422" target="_blank" rel="noopener">https://zhuanlan.zhihu.com/p/68865422</a></p><pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.base <span class="hljs-keyword">import</span> BaseEstimator, TransformerMixin<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">supervised_bins_Transformer</span><span class="hljs-params">(BaseEstimator, TransformerMixin)</span>:</span><span class="hljs-comment">#我们这里写一个分箱的方法</span>    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, task=<span class="hljs-string">'Classification'</span>, method=<span class="hljs-string">'xgboost_tree'</span>)</span>:</span>        self.task=task        self.method=method <span class="hljs-comment">#method 支持4种类型，一种是xgboost tree，一种是lightgbm tree，一种是sklearn tree</span>        <span class="hljs-comment">#一种是chimerge </span>     <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">fit</span><span class="hljs-params">(self, X=None, y=None)</span>:</span>        <span class="hljs-keyword">if</span> self.method==<span class="hljs-string">'xgboost_tree'</span>:            <span class="hljs-keyword">if</span> self.task==<span class="hljs-string">'Classification'</span>:                clf=xgb.XGBClassifier(n_estimators=<span class="hljs-number">1</span>)            <span class="hljs-keyword">else</span>:                clf=xgb.XGBRegressor(n_estimators=<span class="hljs-number">1</span>)            clf.fit(X,y)                            <span class="hljs-keyword">if</span> self.method==<span class="hljs-string">'lightgbm_tree'</span>:            <span class="hljs-keyword">if</span> self.task==<span class="hljs-string">'Classification'</span>:                clf=lgb.LGBMClassifier(n_estimators=<span class="hljs-number">1</span>)            <span class="hljs-keyword">else</span>:                clf=lgb.LGBMRegressor(n_estimators=<span class="hljs-number">1</span>)            clf.fit(X.values.reshape(<span class="hljs-number">-1</span>,<span class="hljs-number">1</span>),y)                            <span class="hljs-keyword">if</span> self.method==<span class="hljs-string">'sklearn_tree'</span>:            <span class="hljs-keyword">if</span> self.task==<span class="hljs-string">'Classification'</span>:                clf=tree.DecisionTreeClassifier()            <span class="hljs-keyword">else</span>:                clf=tree.DecisionTreeRegressor()            clf.fit(X.values.reshape(<span class="hljs-number">-1</span>,<span class="hljs-number">1</span>),y)            tree_rules=clf.tree_.threshold            self.tree_rules=tree_rules[tree_rules!=<span class="hljs-number">-2</span>] <span class="hljs-comment">#sklearn 中的tree用-2判断叶节点，-2不是一个分裂阈值要删除</span>     <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">transform</span><span class="hljs-params">(self, X)</span>:</span>        <span class="hljs-keyword">return</span> np.digitize(X,self.tree_rules)    tree = supervised_bins_Transformer(task=<span class="hljs-string">'Classification'</span>, method=<span class="hljs-string">'xgboost_tree'</span>)tree.fit(X,y)tree.transform(X)</code></pre><h2 id="特征斜度处理"><a href="#特征斜度处理" class="headerlink" title="特征斜度处理"></a>特征斜度处理</h2><p>使用skew判断斜度，然后Compute the Box-Cox transformation of boxcox_normmax</p><pre><code class="hljs python"><span class="hljs-comment">#修改斜度特征</span><span class="hljs-keyword">from</span> scipy.stats <span class="hljs-keyword">import</span> skew, norm<span class="hljs-keyword">from</span> scipy.special <span class="hljs-keyword">import</span> boxcox1p<span class="hljs-keyword">from</span> scipy.stats <span class="hljs-keyword">import</span> boxcox_normmax<span class="hljs-comment"># 选取数字特征</span>numeric_dtypes = [<span class="hljs-string">'int16'</span>, <span class="hljs-string">'int32'</span>, <span class="hljs-string">'int64'</span>, <span class="hljs-string">'float16'</span>, <span class="hljs-string">'float32'</span>, <span class="hljs-string">'float64'</span>]numeric = []<span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> X_cleaned.columns:    <span class="hljs-keyword">if</span> X_cleaned[i].dtype <span class="hljs-keyword">in</span> numeric_dtypes:        numeric.append(i)        <span class="hljs-comment"># 找到斜度特征，大于0.5的</span>skew_features = X_cleaned[numeric].apply(<span class="hljs-keyword">lambda</span> x: skew(x)).sort_values(ascending=<span class="hljs-literal">False</span>)high_skew = skew_features[skew_features &gt; <span class="hljs-number">0.5</span>]skew_index = high_skew.indexprint(<span class="hljs-string">"There are &#123;&#125; numerical features with Skew &gt; 0.5 :"</span>.format(high_skew.shape[<span class="hljs-number">0</span>]))skewness = pd.DataFrame(&#123;<span class="hljs-string">'Skew'</span> :high_skew&#125;)print(skew_features.head(<span class="hljs-number">10</span>))<span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> skew_index:    X_cleaned[i] = boxcox1p(X_cleaned[i], boxcox_normmax(X_cleaned[i] + <span class="hljs-number">1</span>))</code></pre>]]></content>
+    
+    
+    <categories>
+      
+      <category>数据挖掘</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>特征工程</tag>
       
     </tags>
     

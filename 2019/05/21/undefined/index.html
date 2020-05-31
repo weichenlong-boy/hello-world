@@ -17,7 +17,7 @@
   <meta name="description" content="坚持分享知识，坚持留言支持">
   <meta name="author" content="WeiChenLong">
   <meta name="keywords" content="Python 机器学习 深度学习">
-  <title>Pdpipe库的使用和实战 - WeiChenLong&#39;s Blog</title>
+  <title>连续特征处理 - WeiChenLong&#39;s Blog</title>
 
   <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
 <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
@@ -132,8 +132,8 @@
               
                 <div class="mt-3 post-meta">
                   <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-                  <time datetime="2020-05-27 18:47">
-                    2020年5月27日 晚上
+                  <time datetime="2019-05-21 00:11">
+                    2019年5月21日 凌晨
                   </time>
                 </div>
               
@@ -143,7 +143,7 @@
                   
                   <span class="post-meta mr-2">
                     <i class="iconfont icon-chart"></i>
-                    715 字
+                    549 字
                   </span>
                 
 
@@ -189,53 +189,105 @@
           <div class="post-content mx-auto" id="post">
             
             <article class="markdown-body">
-              <h3 id="Pdpipe初识"><a href="#Pdpipe初识" class="headerlink" title="Pdpipe初识"></a>Pdpipe初识</h3><p>“在<a href="https://pdpipe.github.io/pdpipe/doc/pdpipe/#pdpipe" target="_blank" rel="noopener"><code>pdpipe</code></a>Python包为构建简洁的界面<code>pandas</code> 是有先决条件，是冗长的管线，支持scikit学习变压器的装修改造设计，具有很强的可序列化。<a href="https://pdpipe.github.io/pdpipe/doc/pdpipe/#pdpipe" target="_blank" rel="noopener"><code>pdpipe</code></a> 管道具有简单的界面，提供有关管道应用程序的信息和错误信息，支持管道算术，并使混合类型数据的处理更加容易。”   这是官方文档的解释，我个人认为pdpipe在处理生成特征变量方面确实很方便。</p>
-<h4 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h4><p>win10的Anaconda(推荐)环境下就可以。打开命令行输入：</p>
-<pre><code class="hljs python">pip install pdpipe</code></pre>
+              <h2 id="连续特征离散化"><a href="#连续特征离散化" class="headerlink" title="连续特征离散化"></a>连续特征离散化</h2><h4 id="为什么要对连续变量进行离散化"><a href="#为什么要对连续变量进行离散化" class="headerlink" title="为什么要对连续变量进行离散化"></a>为什么要对连续变量进行离散化</h4><ul>
+<li>捕捉非线性效应</li>
+<li>方便捕捉交叉效应—groupby</li>
+<li>可以减少过拟合的风险，因为分箱相当于对于数据去粗粒度描述</li>
+<li>离散化后可以提升模型的鲁棒性</li>
+</ul>
+<h4 id="常见的离散化方法"><a href="#常见的离散化方法" class="headerlink" title="常见的离散化方法"></a>常见的离散化方法</h4><h5 id="分箱方法"><a href="#分箱方法" class="headerlink" title="分箱方法"></a>分箱方法</h5><p>等距分箱（<a href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.cut.html" target="_blank" rel="noopener">pandas.cut</a>）</p>
+<pre><code class="hljs python">pd.cut(serise, [<span class="hljs-number">0</span>, <span class="hljs-number">2</span>, <span class="hljs-number">4</span>, <span class="hljs-number">6</span>, <span class="hljs-number">10</span>, <span class="hljs-number">10</span>], labels=<span class="hljs-literal">False</span>)  <span class="hljs-comment">#label指定标签</span></code></pre>
 
-<p>pdpipe的一些模块需要scikit-learn和nltk库的支持，如果没有，pdpipe则会警告，提示你需要安装。</p>
-<h4 id="实战学习"><a href="#实战学习" class="headerlink" title="实战学习"></a>实战学习</h4><p>我们的数据集是汽车行驶信息，如下图：</p>
-<p><img src="/img/Snipaste_2020-05-27_19-05-27.png" srcset="/img/loading.gif" alt="Snipaste_2020-05-27_19-05-27"></p>
-<h5 id="读取代码："><a href="#读取代码：" class="headerlink" title="读取代码："></a>读取代码：</h5><pre><code class="hljs python">df = pd.read_csv(<span class="hljs-string">'./data.csv'</span>,nrows=<span class="hljs-number">100000</span>,encoding=<span class="hljs-string">'gbk'</span>)  <span class="hljs-comment">#读取数据</span>
-df.columns = [<span class="hljs-string">'字段'</span>+str(i) <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> range(<span class="hljs-number">1</span>,<span class="hljs-number">14</span>)]   <span class="hljs-comment">#设置列名</span>
-df = df.drop([<span class="hljs-string">'字段5'</span>,<span class="hljs-string">'字段12'</span>], axis=<span class="hljs-number">1</span>)  <span class="hljs-comment">#删除无用变量</span></code></pre>
+<p>等频分箱（<a href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.qcut.html" target="_blank" rel="noopener">pandas.qcut</a>）</p>
+<pre><code class="hljs python">pd.qcut(range(<span class="hljs-number">5</span>), <span class="hljs-number">3</span>, labels=[<span class="hljs-string">"good"</span>, <span class="hljs-string">"medium"</span>, <span class="hljs-string">"bad"</span>])
+---[good, good, medium, bad, bad]</code></pre>
 
-<p>这里需要说的一点是read_csv里的nrows参数，含义是指定读取文件的前n行，我这里n取10w，减少计算时间。</p>
-<h5 id="数据描述："><a href="#数据描述：" class="headerlink" title="数据描述："></a>数据描述：</h5><p>字段1为id，字段3为车牌，字段4为车牌颜色，日期为时间戳，字段11和字段13为路口编码。</p>
-<h4 id="一、清理数据"><a href="#一、清理数据" class="headerlink" title="一、清理数据"></a>一、清理数据</h4><p>使用pdpipe下的<a href="https://pdpipe.github.io/pdpipe/doc/pdpipe/basic_stages.html" target="_blank" rel="noopener">basic_stages</a>模块，该模块主要是做数据清洗。</p>
-<ol>
-<li>删除掉字段2为99、16、23、31、32的行数据</li>
-<li>删除字段3不是车牌的行数据</li>
-<li>删除掉字段3只出现过一次的行数据</li>
-<li>将日期转化为时间戳</li>
-</ol>
-<p><img src="/img/carbon.png" srcset="/img/loading.gif" alt="carbon"></p>
-<p>其中调用的函数：</p>
-<p><img src="/img/match.png" srcset="/img/loading.gif" alt="match"></p>
-<p>这里使用正则来配备车牌，调用re下的group(0)属性返回配备值，使用异常处理来避免不是车牌的情况下配备值不存在。</p>
-<h4 id="二、处理特征"><a href="#二、处理特征" class="headerlink" title="二、处理特征"></a>二、处理特征</h4><p>使用pdpipe下的<a href="https://pdpipe.github.io/pdpipe/doc/pdpipe/col_generation.html" target="_blank" rel="noopener">col_generation</a>模块，该模块使用函数来生成新的变量。</p>
-<p>将剩下的数据按照字段3相同（同一车牌）的时间顺序排列。使用groupby函数按照字段3聚合，然后对每个group排序。</p>
-<pre><code class="hljs python">data1 = data.groupby(<span class="hljs-string">'字段3'</span>).apply(<span class="hljs-keyword">lambda</span> x: x.sort_values(<span class="hljs-string">'日期'</span>))
-data1.index = data.index</code></pre>
+<h5 id="聚类（sklearn-preprocessing-KBinsDiscretizer）"><a href="#聚类（sklearn-preprocessing-KBinsDiscretizer）" class="headerlink" title="聚类（sklearn.preprocessing.KBinsDiscretizer）"></a>聚类（<a href="https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.KBinsDiscretizer.html?highlight=kbinsdiscretizer#" target="_blank" rel="noopener"><code>sklearn.preprocessing</code>.KBinsDiscretizer</a>）</h5><pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.preprocessing <span class="hljs-keyword">import</span> KBinsDiscretizer
+est = KBinsDiscretizer(n_bins=<span class="hljs-number">3</span>, encode=<span class="hljs-string">'ordinal'</span>, strategy=<span class="hljs-string">'kmeans'</span>)
+est.fit(X)
+Xt = est.transform(X)</code></pre>
 
-<p>然后开始处理：</p>
-<ol>
-<li>前后相邻两行记录时间差小于30min，则删除靠后一条的行数据</li>
-<li>前后相邻两行记录的字段13相同，则删除靠前的行数据</li>
-<li>若最后同一车牌下只剩一个行数据，则删除</li>
-</ol>
-<p><img src="/img/2.png" srcset="/img/loading.gif" alt="2"></p>
-<p>函数模块：</p>
-<p><img src="/img/1.png" srcset="/img/loading.gif" alt="1"></p>
-<h4 id="三、小知识点"><a href="#三、小知识点" class="headerlink" title="三、小知识点"></a>三、小知识点</h4><p>groupby函数下，可以对每个group操作，group可以和dataframe一样处理。</p>
-<pre><code class="hljs python">groupby(<span class="hljs-string">'字段3'</span>).apply(<span class="hljs-keyword">lambda</span> j: j[<span class="hljs-string">'字段13'</span>].iloc[<span class="hljs-number">0</span>])   <span class="hljs-comment">#取出每个group的第一行</span></code></pre>
+<h5 id="基于树"><a href="#基于树" class="headerlink" title="基于树"></a>基于树</h5><p>下面用sklearn的api和sklearn的决策树简单做了一个基于cart tree的决策树分箱，实现了sklearn原生的cart tree和lgb以及xgb tree分箱的功能，参考<a href="https://zhuanlan.zhihu.com/p/68865422" target="_blank" rel="noopener">https://zhuanlan.zhihu.com/p/68865422</a></p>
+<pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.base <span class="hljs-keyword">import</span> BaseEstimator, TransformerMixin
 
-<pre><code class="hljs python"><span class="hljs-comment">#对每个group应用函数，还可以实时操作</span>
-<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">f4</span><span class="hljs-params">(x)</span>:</span>
-    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> range(len(x)):
-        x[<span class="hljs-string">'OD'</span>].iloc[i] = x[<span class="hljs-string">'字段11'</span>].iloc[i][i]
-    <span class="hljs-keyword">return</span> x
-x.groupby(<span class="hljs-string">'字段3'</span>).apply(<span class="hljs-keyword">lambda</span> j: f4(j))</code></pre>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">supervised_bins_Transformer</span><span class="hljs-params">(BaseEstimator, TransformerMixin)</span>:</span><span class="hljs-comment">#我们这里写一个分箱的方法</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, task=<span class="hljs-string">'Classification'</span>, method=<span class="hljs-string">'xgboost_tree'</span>)</span>:</span>
+
+        self.task=task
+        self.method=method <span class="hljs-comment">#method 支持4种类型，一种是xgboost tree，一种是lightgbm tree，一种是sklearn tree</span>
+        <span class="hljs-comment">#一种是chimerge </span>
+ 
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">fit</span><span class="hljs-params">(self, X=None, y=None)</span>:</span>
+        <span class="hljs-keyword">if</span> self.method==<span class="hljs-string">'xgboost_tree'</span>:
+            <span class="hljs-keyword">if</span> self.task==<span class="hljs-string">'Classification'</span>:
+                clf=xgb.XGBClassifier(n_estimators=<span class="hljs-number">1</span>)
+            <span class="hljs-keyword">else</span>:
+                clf=xgb.XGBRegressor(n_estimators=<span class="hljs-number">1</span>)
+            clf.fit(X,y)
+        
+            
+        <span class="hljs-keyword">if</span> self.method==<span class="hljs-string">'lightgbm_tree'</span>:
+            <span class="hljs-keyword">if</span> self.task==<span class="hljs-string">'Classification'</span>:
+                clf=lgb.LGBMClassifier(n_estimators=<span class="hljs-number">1</span>)
+            <span class="hljs-keyword">else</span>:
+                clf=lgb.LGBMRegressor(n_estimators=<span class="hljs-number">1</span>)
+            clf.fit(X.values.reshape(<span class="hljs-number">-1</span>,<span class="hljs-number">1</span>),y)
+            
+        
+        <span class="hljs-keyword">if</span> self.method==<span class="hljs-string">'sklearn_tree'</span>:
+            <span class="hljs-keyword">if</span> self.task==<span class="hljs-string">'Classification'</span>:
+                clf=tree.DecisionTreeClassifier()
+            <span class="hljs-keyword">else</span>:
+                clf=tree.DecisionTreeRegressor()
+            clf.fit(X.values.reshape(<span class="hljs-number">-1</span>,<span class="hljs-number">1</span>),y)
+            tree_rules=clf.tree_.threshold
+            self.tree_rules=tree_rules[tree_rules!=<span class="hljs-number">-2</span>] <span class="hljs-comment">#sklearn 中的tree用-2判断叶节点，-2不是一个分裂阈值要删除</span>
+ 
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">transform</span><span class="hljs-params">(self, X)</span>:</span>
+        <span class="hljs-keyword">return</span> np.digitize(X,self.tree_rules)
+    
+tree = supervised_bins_Transformer(task=<span class="hljs-string">'Classification'</span>, method=<span class="hljs-string">'xgboost_tree'</span>)
+tree.fit(X,y)
+tree.transform(X)</code></pre>
+
+<h2 id="特征斜度处理"><a href="#特征斜度处理" class="headerlink" title="特征斜度处理"></a>特征斜度处理</h2><p>使用skew判断斜度，然后Compute the Box-Cox transformation of boxcox_normmax</p>
+<pre><code class="hljs python"><span class="hljs-comment">#修改斜度特征</span>
+<span class="hljs-keyword">from</span> scipy.stats <span class="hljs-keyword">import</span> skew, norm
+<span class="hljs-keyword">from</span> scipy.special <span class="hljs-keyword">import</span> boxcox1p
+<span class="hljs-keyword">from</span> scipy.stats <span class="hljs-keyword">import</span> boxcox_normmax
+<span class="hljs-comment"># 选取数字特征</span>
+numeric_dtypes = [<span class="hljs-string">'int16'</span>, <span class="hljs-string">'int32'</span>, <span class="hljs-string">'int64'</span>, <span class="hljs-string">'float16'</span>, <span class="hljs-string">'float32'</span>, <span class="hljs-string">'float64'</span>]
+numeric = []
+<span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> X_cleaned.columns:
+    <span class="hljs-keyword">if</span> X_cleaned[i].dtype <span class="hljs-keyword">in</span> numeric_dtypes:
+        numeric.append(i)
+        
+<span class="hljs-comment"># 找到斜度特征，大于0.5的</span>
+skew_features = X_cleaned[numeric].apply(<span class="hljs-keyword">lambda</span> x: skew(x)).sort_values(ascending=<span class="hljs-literal">False</span>)
+high_skew = skew_features[skew_features &gt; <span class="hljs-number">0.5</span>]
+skew_index = high_skew.index
+
+print(<span class="hljs-string">"There are &#123;&#125; numerical features with Skew &gt; 0.5 :"</span>.format(high_skew.shape[<span class="hljs-number">0</span>]))
+skewness = pd.DataFrame(&#123;<span class="hljs-string">'Skew'</span> :high_skew&#125;)
+print(skew_features.head(<span class="hljs-number">10</span>))
+
+<span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> skew_index:
+    X_cleaned[i] = boxcox1p(X_cleaned[i], boxcox_normmax(X_cleaned[i] + <span class="hljs-number">1</span>))</code></pre>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
             </article>
@@ -243,11 +295,18 @@ x.groupby(<span class="hljs-string">'字段3'</span>).apply(<span class="hljs-ke
             <div>
               <div class="post-metas mb-3">
                 
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E6%95%B0%E6%8D%AE%E6%8C%96%E6%8E%98/">数据挖掘</a>
+                    
+                  </div>
+                
                 
                   <div class="post-meta">
                     <i class="iconfont icon-tags"></i>
                     
-                      <a class="hover-with-bg" href="/tags/python%E7%BB%83%E4%B9%A0/">python练习</a>
+                      <a class="hover-with-bg" href="/tags/%E7%89%B9%E5%BE%81%E5%B7%A5%E7%A8%8B/">特征工程</a>
                     
                   </div>
                 
@@ -260,21 +319,15 @@ x.groupby(<span class="hljs-string">'字段3'</span>).apply(<span class="hljs-ke
                   <div class="post-prev col-6">
                     
                     
-                      <a href="/2020/05/28/undefined/">
+                      <a href="/2020/05/27/undefined/">
                         <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">自动特征编码</span>
+                        <span class="hidden-mobile">Pdpipe库的使用和实战</span>
                         <span class="visible-mobile">上一篇</span>
                       </a>
                     
                   </div>
                   <div class="post-next col-6">
                     
-                    
-                      <a href="/2019/05/21/undefined/">
-                        <span class="hidden-mobile">连续特征处理</span>
-                        <span class="visible-mobile">下一篇</span>
-                        <i class="iconfont icon-arrowright"></i>
-                      </a>
                     
                   </div>
                 </div>
@@ -495,7 +548,7 @@ x.groupby(<span class="hljs-string">'字段3'</span>).apply(<span class="hljs-ke
     var typed = new Typed('#subtitle', {
       strings: [
         '  ',
-        "Pdpipe库的使用和实战&nbsp;",
+        "连续特征处理&nbsp;",
       ],
       cursorChar: "_",
       typeSpeed: 70,
