@@ -143,7 +143,7 @@
                   
                   <span class="post-meta mr-2">
                     <i class="iconfont icon-chart"></i>
-                    0 字
+                    852 字
                   </span>
                 
 
@@ -153,7 +153,7 @@
                       <i class="iconfont icon-clock-fill"></i>
                     
                     
-                    1
+                    15
                      分钟
                   </span>
                 
@@ -189,12 +189,175 @@
           <div class="post-content mx-auto" id="post">
             
             <article class="markdown-body">
-              
+              <h2 id="Hyperopt-Bayesian-optimization"><a href="#Hyperopt-Bayesian-optimization" class="headerlink" title="Hyperopt Bayesian optimization"></a>Hyperopt Bayesian optimization</h2><h4 id="安装（Hyperopt-Distributed-Asynchronous-Hyper-parameter-Optimization）"><a href="#安装（Hyperopt-Distributed-Asynchronous-Hyper-parameter-Optimization）" class="headerlink" title="安装（Hyperopt: Distributed Asynchronous Hyper-parameter Optimization）"></a>安装（<a href="http://hyperopt.github.io/hyperopt/#hyperopt-distributed-asynchronous-hyper-parameter-optimization" target="_blank" rel="noopener">Hyperopt: Distributed Asynchronous Hyper-parameter Optimization</a>）</h4><pre><code class="hljs python">pip install hyperopt</code></pre>
+
+<h4 id="Hyperopt步骤"><a href="#Hyperopt步骤" class="headerlink" title="Hyperopt步骤"></a>Hyperopt步骤</h4><ul>
+<li>the objective function to minimize（定义最小化函数）</li>
+<li>the space over which to search（搜索空间）</li>
+<li>the database to store all point evaluations of the search（存储搜索的所有点计算的数据库）</li>
+<li>the search algorithm to use（使用的搜索算法）</li>
+</ul>
+<h4 id="定义搜索空间"><a href="#定义搜索空间" class="headerlink" title="定义搜索空间"></a>定义搜索空间</h4><pre><code class="hljs python"><span class="hljs-keyword">from</span> hyperopt <span class="hljs-keyword">import</span> hp
+space = hp.choice(<span class="hljs-string">'a'</span>,
+    [
+        (<span class="hljs-string">'case 1'</span>, <span class="hljs-number">1</span> + hp.lognormal(<span class="hljs-string">'c1'</span>, <span class="hljs-number">0</span>, <span class="hljs-number">1</span>)),
+        (<span class="hljs-string">'case 2'</span>, hp.uniform(<span class="hljs-string">'c2'</span>, <span class="hljs-number">-10</span>, <span class="hljs-number">10</span>))
+    ])</code></pre>
+
+<p>所描述的搜索空间<code>space</code>具有3个参数：</p>
+<ul>
+<li><code>a</code>-选择大小写</li>
+<li><code>c1</code>-在情况1中使用的正值参数</li>
+<li><code>c2</code>-在情况2中使用的有界实值参数</li>
+</ul>
+<h5 id="常用参数表达式"><a href="#常用参数表达式" class="headerlink" title="常用参数表达式"></a>常用参数表达式</h5><p><strong>hp.choice(label, options)</strong></p>
+<p>返回选项之一，options应该是列表或元组。元素<code>options</code>本身可以是[嵌套]随机表达。在这种情况下，仅出现在某些选项中的随机选择成为<em>条件</em>参数。</p>
+<p><strong>hp.randint(label, upper)</strong></p>
+<p>返回范围为[0，upper）的随机整数。这种分布的语义是，与更远的整数值相比，附近的整数值之间的损失函数<em>不再</em>具有相关性。例如，这是用于描述随机种子的适当分布。如果损失函数可能更多附近的整数值相关联，那么你或许应该用“量化”连续分布的一个，比如要么<code>quniform</code>，<code>qloguniform</code>，<code>qnormal</code>或<code>qlognormal</code>。</p>
+<p><strong>hp.uniform(label, low, high)</strong></p>
+<ul>
+<li>在<code>low</code>和<code>high</code>之间返回一个值。</li>
+<li>优化时，此变量被限制为两侧间隔。</li>
+</ul>
+<p><strong>hp.normal(label, mu, sigma)</strong></p>
+<p>返回一个正态分布的实数值，平均值为<code>mu</code>，标准偏差为<code>sigma</code>。优化时，这是一个不受约束的变量。</p>
+<h4 id="调参逻辑回归示例"><a href="#调参逻辑回归示例" class="headerlink" title="调参逻辑回归示例"></a>调参逻辑回归示例</h4><pre><code class="hljs python"><span class="hljs-comment">#hyperopt调参</span>
+<span class="hljs-keyword">from</span> hyperopt <span class="hljs-keyword">import</span> fmin, tpe, hp, partial, Trials
+
+<span class="hljs-comment"># 自定义hyperopt的参数空间</span>
+space = &#123;<span class="hljs-string">'max_iter'</span>: hp.choice(<span class="hljs-string">"max_iter"</span>, range(<span class="hljs-number">1</span>,<span class="hljs-number">1000</span>)),
+         <span class="hljs-string">'C'</span>: hp.uniform(<span class="hljs-string">"C"</span>, <span class="hljs-number">0.001</span>,<span class="hljs-number">1000</span>),
+         <span class="hljs-string">'tol'</span>:hp.uniform(<span class="hljs-string">'tol'</span>, <span class="hljs-number">0.00001</span>,<span class="hljs-number">0.1</span>)
+         &#125;
+
+<span class="hljs-comment">#这里使用的sklearn的cross_val_score交叉验证调参，但与实际交叉验证结果会有出入</span>
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">forest1</span><span class="hljs-params">(params)</span>:</span>
+    logis = LogisticRegression(max_iter=params[<span class="hljs-string">"max_iter"</span>],C=params[<span class="hljs-string">"C"</span>],tol=params[<span class="hljs-string">"tol"</span>])
+    accuracy = cross_val_score(logis, X_cleaned, data[Y_], scoring=<span class="hljs-string">'roc_auc'</span>, cv=<span class="hljs-number">10</span>)
+    <span class="hljs-keyword">return</span> -accuracy.max()
+
+<span class="hljs-comment"># 开始使用hyperopt进行自动调参</span>
+
+best = fmin(forest1, space, algo=tpe.suggest,trials=Trials(), max_evals=<span class="hljs-number">50</span>)</code></pre>
+
+<h4 id="调参XGBoost示例"><a href="#调参XGBoost示例" class="headerlink" title="调参XGBoost示例"></a>调参XGBoost示例</h4><pre><code class="hljs python"><span class="hljs-keyword">from</span> hyperopt <span class="hljs-keyword">import</span> fmin, tpe, hp, partial, Trials
+<span class="hljs-keyword">import</span> xgboost <span class="hljs-keyword">as</span> xgb
+<span class="hljs-keyword">from</span> numpy.random <span class="hljs-keyword">import</span> RandomState
+
+dtrain = xgb.DMatrix(data=x_train,label=y_train)
+dtest = xgb.DMatrix(data=x_test,label=y_test)
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">hyperopt_objective</span><span class="hljs-params">(params)</span>:</span>
+    model = xgb.XGBRegressor(
+        max_depth=int(params[<span class="hljs-string">'max_depth'</span>])+<span class="hljs-number">5</span>,
+        learning_rate=params[<span class="hljs-string">'learning_rate'</span>],
+        silent=<span class="hljs-number">1</span>,
+        objective=<span class="hljs-string">'reg:linear'</span>,
+        eval_metric=<span class="hljs-string">'rmse'</span>,
+        seed=<span class="hljs-number">42</span>,
+        nthread=<span class="hljs-number">-1</span>,
+    )
+    res = xgb.cv(model.get_params(), dtrain, num_boost_round=<span class="hljs-number">10</span>, nfold=<span class="hljs-number">5</span>,
+             callbacks=[xgb.callback.print_evaluation(show_stdv=<span class="hljs-literal">False</span>),
+                        xgb.callback.early_stop(<span class="hljs-number">3</span>)])
+    <span class="hljs-keyword">return</span> np.min(res[<span class="hljs-string">'test-rmse-mean'</span>]) <span class="hljs-comment"># as hyperopt minimises</span>
+
+params_space = &#123;
+    <span class="hljs-string">'max_depth'</span>: hp.randint(<span class="hljs-string">'max_depth'</span>, <span class="hljs-number">6</span>),
+    <span class="hljs-string">'learning_rate'</span>: hp.uniform(<span class="hljs-string">'learning_rate'</span>, <span class="hljs-number">1e-3</span>, <span class="hljs-number">5e-1</span>),
+&#125;
+
+trials = hyperopt.Trials()
+best = fmin(
+    hyperopt_objective,
+    space=params_space,
+    algo=tpe.suggest,
+    max_evals=<span class="hljs-number">50</span>,
+    trials=trials,
+    rstate=RandomState(<span class="hljs-number">123</span>)
+)
+
+print(<span class="hljs-string">"\n展示hyperopt获取的最佳结果，但是要注意的是我们对hyperopt最初的取值范围做过一次转换"</span>)
+print(best)</code></pre>
+
+<h4 id="调参LightGBM示例"><a href="#调参LightGBM示例" class="headerlink" title="调参LightGBM示例"></a>调参LightGBM示例</h4><pre><code class="hljs python"><span class="hljs-keyword">from</span> hyperopt <span class="hljs-keyword">import</span> fmin, tpe, hp, partial, Trials
+<span class="hljs-keyword">import</span> lightgbm <span class="hljs-keyword">as</span> lgb
+<span class="hljs-keyword">from</span> numpy.random <span class="hljs-keyword">import</span> RandomState
+
+dtrain = xgb.DMatrix(data=x_train,label=y_train)
+dtest = xgb.DMatrix(data=x_test,label=y_test)
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">hyperopt_objective</span><span class="hljs-params">(params)</span>:</span>
+    model = lgb.LGBMRegressor(
+        num_leaves = <span class="hljs-number">31</span>,
+        max_depth=int(params[<span class="hljs-string">'max_depth'</span>]),
+        learning_rate=params[<span class="hljs-string">'learning_rate'</span>],
+        objective=<span class="hljs-string">'regressor'</span>,
+        eval_metric=<span class="hljs-string">'rmse'</span>,
+        seed=<span class="hljs-number">42</span>,
+        nthread=<span class="hljs-number">-1</span>,
+    )
+    res = lgb.cv(model.get_params(), dtrain, num_boost_round=<span class="hljs-number">10</span>, nfold=<span class="hljs-number">5</span>,
+             callbacks=[xgb.callback.print_evaluation(show_stdv=<span class="hljs-literal">False</span>),
+                        xgb.callback.early_stop(<span class="hljs-number">3</span>)])
+    <span class="hljs-keyword">return</span> np.min(res[<span class="hljs-string">'test-rmse-mean'</span>]) <span class="hljs-comment"># as hyperopt minimises</span>
+
+params_space = &#123;
+    <span class="hljs-string">'max_depth'</span>: hp.randint(<span class="hljs-string">'max_depth'</span>, <span class="hljs-number">6</span>),
+    <span class="hljs-string">'learning_rate'</span>: hp.uniform(<span class="hljs-string">'learning_rate'</span>, <span class="hljs-number">1e-3</span>, <span class="hljs-number">5e-1</span>),
+&#125;
+
+trials = hyperopt.Trials()
+best = fmin(
+    hyperopt_objective,
+    space=params_space,
+    algo=tpe.suggest,
+    max_evals=<span class="hljs-number">50</span>,
+    trials=trials,
+    rstate=RandomState(<span class="hljs-number">123</span>)
+)
+
+print(<span class="hljs-string">"\n展示hyperopt获取的最佳结果，但是要注意的是我们对hyperopt最初的取值范围做过一次转换"</span>)
+print(best)</code></pre>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             </article>
             <hr>
             <div>
               <div class="post-metas mb-3">
                 
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E6%95%B0%E6%8D%AE%E6%8C%96%E6%8E%98/">数据挖掘</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>
+                    
+                  </div>
                 
               </div>
               
