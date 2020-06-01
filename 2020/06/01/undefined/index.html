@@ -17,7 +17,7 @@
   <meta name="description" content="坚持分享知识，坚持留言支持">
   <meta name="author" content="WeiChenLong">
   <meta name="keywords" content="Python 机器学习 深度学习">
-  <title>归档 - WeiChenLong&#39;s Blog</title>
+  <title>GBDT特征+LR - WeiChenLong&#39;s Blog</title>
 
   <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
 <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
@@ -46,7 +46,7 @@
 
 
 <body>
-  <header style="height: 60vh;">
+  <header style="height: 70vh;">
     <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand"
@@ -129,6 +129,45 @@
             </span>
 
             
+              
+                <div class="mt-3 post-meta">
+                  <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+                  <time datetime="2020-06-01 12:15">
+                    2020年6月1日 中午
+                  </time>
+                </div>
+              
+
+              <div class="mt-1">
+                
+                  
+                  <span class="post-meta mr-2">
+                    <i class="iconfont icon-chart"></i>
+                    500 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta mr-2">
+                      <i class="iconfont icon-clock-fill"></i>
+                    
+                    
+                    7
+                     分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="iconfont icon-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </div>
+            
           </div>
 
           
@@ -139,61 +178,147 @@
 
   <main>
     
-      <div class="container nopadding-md">
-        <div class="py-5" id="board"
-          >
-          
-          <div class="container">
-            <div class="row">
-              <div class="col-12 col-md-10 m-auto">
-                
-
-<div class="list-group">
-  <p class="h4">共计 7 篇文章</p>
-  <hr>
-  
-    
       
-      <p class="h5">2020</p>
-    
-    <a href="/2020/05/31/undefined/" class="list-group-item list-group-item-action">
-      <span class="archive-post-title">贝叶斯优化调参</span>
-      <span style="float: right;">05-31</span>
-    </a>
-  
-    
-    <a href="/2020/05/30/undefined/" class="list-group-item list-group-item-action">
-      <span class="archive-post-title">自动特征挖掘</span>
-      <span style="float: right;">05-30</span>
-    </a>
-  
-    
-    <a href="/2020/05/29/undefined/" class="list-group-item list-group-item-action">
-      <span class="archive-post-title">特征降维</span>
-      <span style="float: right;">05-29</span>
-    </a>
-  
-    
-    <a href="/2020/05/28/undefined/" class="list-group-item list-group-item-action">
-      <span class="archive-post-title">自动特征编码</span>
-      <span style="float: right;">05-28</span>
-    </a>
-  
-    
-    <a href="/2020/05/27/undefined/" class="list-group-item list-group-item-action">
-      <span class="archive-post-title">Pdpipe库的使用和实战</span>
-      <span style="float: right;">05-27</span>
-    </a>
-  
-</div>
 
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <article class="markdown-body">
+              <h2 id="GBDT特征构造"><a href="#GBDT特征构造" class="headerlink" title="GBDT特征构造"></a>GBDT特征构造</h2><p><a href="https://flashgene.com/archives/71504.html" target="_blank" rel="noopener">本文参考</a></p>
+<h4 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h4><p>GBDT 是一种常用的非线性模型，基于集成学习中 boosting 的思想，由于GBDT本身可以发现多种有区分性的特征以及特征组合，决策树的路径可以直接作为 LR 输入特征使用，省去了人工寻找特征、特征组合的步骤。所以可以将 GBDT 的叶子结点输出，作为LR的输入，如图所示：</p>
+<p><img src="/img/GBDT.png" srcset="/img/loading.gif" alt="GBDT"></p>
+<p>这种通过 GBDT 生成LR特征的方式（GBDT+LR），业界已有实践（Facebook，Kaggle-2014），且效果不错，是非常值得尝试的思路。</p>
+<h4 id="关键点"><a href="#关键点" class="headerlink" title="关键点"></a>关键点</h4><ul>
+<li><strong>采用ensemble决策树而非单颗树</strong></li>
+</ul>
+<p>一棵树的表达能力很弱，不足以表达多个有区分性的特征组合，多棵树的表达能力更强一些。GBDT 每棵树都在学习前面棵树尚存的不足，迭代多少次就会生成多少颗树。按 paper 以及 Kaggle 竞赛中的 GBDT+LR 融合方式，多棵树正好满足 LR 每条训练样本可以通过 GBDT 映射成多个特征的需求。</p>
+<ul>
+<li><strong>采用 GBDT 而非 RF</strong></li>
+</ul>
+<p>RF 也是多棵树，但从效果上有实践证明不如 GBDT。且 GBDT 前面的树，特征分裂主要体现对多数样本有区分度的特征；后面的树，主要体现的是经过前 N 颗树，残差仍然较大的少数样本。优先选用在整体上有区分度的特征，再选用针对少数样本有区分度的特征，思路更加合理，这应该也是用 GBDT 的原因。</p>
+<h4 id="实现代码"><a href="#实现代码" class="headerlink" title="实现代码"></a>实现代码</h4><pre><code class="hljs python"><span class="hljs-keyword">import</span> category_encoders <span class="hljs-keyword">as</span> ce
+<span class="hljs-keyword">from</span> sklearn.ensemble <span class="hljs-keyword">import</span> GradientBoostingClassifier
+<span class="hljs-keyword">from</span> sklearn.linear_model <span class="hljs-keyword">import</span> LogisticRegression
+<span class="hljs-comment"># 训练GBDT模型</span>
+gbdt = GradientBoostingClassifier(n_estimators=<span class="hljs-number">100</span>)  <span class="hljs-comment">#100颗树生成100个特征</span>
+gbdt.fit(data[col],data[<span class="hljs-string">'Label'</span>])
+<span class="hljs-comment"># 对GBDT预测结果进行onehot编码</span>
+onehot = ce.OneHotEncoder(col)
+onehot = onehot.fit_transform(gbdt.apply(data[col])[:, :, <span class="hljs-number">0</span>])
+<span class="hljs-comment"># 训练LR模型</span>
+lr = LogisticRegression()
+lr.fit(onehot.transform(gbdt.apply(X_train)[:, :, <span class="hljs-number">0</span>]), Y_train)
+<span class="hljs-comment"># 测试集预测</span>
+Y_pred = lr.predict_proba(onehot.transform(gbdt.apply(X_test)[:, :, <span class="hljs-number">0</span>]))[:, <span class="hljs-number">1</span>]</code></pre>
+
+
+
+
+
+
+            </article>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/%E7%89%B9%E5%BE%81%E5%B7%A5%E7%A8%8B/">特征工程</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" target="_blank" rel="nofollow noopener noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-6">
+                    
+                    
+                  </div>
+                  <div class="post-next col-6">
+                    
+                    
+                      <a href="/2020/05/31/undefined/">
+                        <span class="hidden-mobile">贝叶斯优化调参</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <div class="comments" id="comments">
+                
+                
+  <div id="vcomments"></div>
+  <script defer src="https://cdn.staticfile.org/valine/1.4.14/Valine.min.js" ></script>
+
+  <script type="text/javascript">
+    var oldLoadVa = window.onload;
+    window.onload = function () {
+      oldLoadVa && oldLoadVa();
+
+      new Valine({
+        el: "#vcomments",
+        app_id: "vlgtQ35JA02DviH42D5xO7DA-gzGzoHsz",
+        app_key: "E4PyoDjEuOj4oRJoSa5F4i05",
+        placeholder: "说点什么",
+        path: window.location.pathname,
+        avatar: "retro",
+        meta: ["nick","mail"],
+        pageSize: "10",
+        lang: "zh-CN",
+        highlight: true,
+        recordIP: true,
+        serverURLs: "",
+      });
+    };
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="https://valine.js.org" target="_blank" rel="nofollow noopener noopener">comments
+      powered by Valine.</a></noscript>
 
 
               </div>
-            </div>
+            
           </div>
         </div>
       </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
     
   </main>
 
@@ -274,6 +399,34 @@
 
 
 
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.11.1/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        collapseDepth: 0,
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc').css('visibility', 'visible');
+      }
+    });
+  </script>
+
+
+
 
 
   <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
@@ -326,7 +479,7 @@
     var typed = new Typed('#subtitle', {
       strings: [
         '  ',
-        "归档&nbsp;",
+        "GBDT特征+LR&nbsp;",
       ],
       cursorChar: "_",
       typeSpeed: 70,
@@ -369,6 +522,20 @@
   </script>
 
 
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+  <script>
+    $('#post img:not(.no-zoom img, img[no-zoom]), img[zoom]').each(
+      function () {
+        var element = document.createElement('a');
+        $(element).attr('data-fancybox', 'images');
+        $(element).attr('href', $(this).attr('src'));
+        $(this).wrap(element);
+      }
+    );
+  </script>
 
 
 

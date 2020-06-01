@@ -143,7 +143,7 @@
                   
                   <span class="post-meta mr-2">
                     <i class="iconfont icon-chart"></i>
-                    549 字
+                    919 字
                   </span>
                 
 
@@ -153,7 +153,7 @@
                       <i class="iconfont icon-clock-fill"></i>
                     
                     
-                    10
+                    19
                      分钟
                   </span>
                 
@@ -207,49 +207,159 @@ est = KBinsDiscretizer(n_bins=<span class="hljs-number">3</span>, encode=<span c
 est.fit(X)
 Xt = est.transform(X)</code></pre>
 
-<h5 id="基于树"><a href="#基于树" class="headerlink" title="基于树"></a>基于树</h5><p>下面用sklearn的api和sklearn的决策树简单做了一个基于cart tree的决策树分箱，实现了sklearn原生的cart tree和lgb以及xgb tree分箱的功能，参考<a href="https://zhuanlan.zhihu.com/p/68865422" target="_blank" rel="noopener">https://zhuanlan.zhihu.com/p/68865422</a></p>
-<pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.base <span class="hljs-keyword">import</span> BaseEstimator, TransformerMixin
+<h5 id="卡方分箱"><a href="#卡方分箱" class="headerlink" title="卡方分箱"></a>卡方分箱</h5><p><a href="https://github.com/Liucoren/Chimerge/blob/master/ChiMerge.py" target="_blank" rel="noopener">参考github上</a></p>
+<pre><code class="hljs python"><span class="hljs-keyword">import</span> math
+<span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np
+<span class="hljs-keyword">import</span> pandas <span class="hljs-keyword">as</span> pd
 
-<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">supervised_bins_Transformer</span><span class="hljs-params">(BaseEstimator, TransformerMixin)</span>:</span><span class="hljs-comment">#我们这里写一个分箱的方法</span>
-    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, task=<span class="hljs-string">'Classification'</span>, method=<span class="hljs-string">'xgboost_tree'</span>)</span>:</span>
+iris = pd.read_csv(<span class="hljs-string">'iris.csv'</span>, header=<span class="hljs-literal">None</span>)
+iris.columns = [<span class="hljs-string">'sepal_length'</span>, <span class="hljs-string">'sepal_width'</span>,
+                <span class="hljs-string">'petal_length'</span>, <span class="hljs-string">'petal_width'</span>, <span class="hljs-string">'target_class'</span>]
 
-        self.task=task
-        self.method=method <span class="hljs-comment">#method 支持4种类型，一种是xgboost tree，一种是lightgbm tree，一种是sklearn tree</span>
-        <span class="hljs-comment">#一种是chimerge </span>
- 
+<span class="hljs-comment">#将最小卡方值添加进DataFrame</span>
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">merge_rows</span><span class="hljs-params">(df,feature)</span>:</span>
 
-    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">fit</span><span class="hljs-params">(self, X=None, y=None)</span>:</span>
-        <span class="hljs-keyword">if</span> self.method==<span class="hljs-string">'xgboost_tree'</span>:
-            <span class="hljs-keyword">if</span> self.task==<span class="hljs-string">'Classification'</span>:
-                clf=xgb.XGBClassifier(n_estimators=<span class="hljs-number">1</span>)
-            <span class="hljs-keyword">else</span>:
-                clf=xgb.XGBRegressor(n_estimators=<span class="hljs-number">1</span>)
-            clf.fit(X,y)
-        
-            
-        <span class="hljs-keyword">if</span> self.method==<span class="hljs-string">'lightgbm_tree'</span>:
-            <span class="hljs-keyword">if</span> self.task==<span class="hljs-string">'Classification'</span>:
-                clf=lgb.LGBMClassifier(n_estimators=<span class="hljs-number">1</span>)
-            <span class="hljs-keyword">else</span>:
-                clf=lgb.LGBMRegressor(n_estimators=<span class="hljs-number">1</span>)
-            clf.fit(X.values.reshape(<span class="hljs-number">-1</span>,<span class="hljs-number">1</span>),y)
-            
-        
-        <span class="hljs-keyword">if</span> self.method==<span class="hljs-string">'sklearn_tree'</span>:
-            <span class="hljs-keyword">if</span> self.task==<span class="hljs-string">'Classification'</span>:
-                clf=tree.DecisionTreeClassifier()
-            <span class="hljs-keyword">else</span>:
-                clf=tree.DecisionTreeRegressor()
-            clf.fit(X.values.reshape(<span class="hljs-number">-1</span>,<span class="hljs-number">1</span>),y)
-            tree_rules=clf.tree_.threshold
-            self.tree_rules=tree_rules[tree_rules!=<span class="hljs-number">-2</span>] <span class="hljs-comment">#sklearn 中的tree用-2判断叶节点，-2不是一个分裂阈值要删除</span>
- 
-    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">transform</span><span class="hljs-params">(self, X)</span>:</span>
-        <span class="hljs-keyword">return</span> np.digitize(X,self.tree_rules)
+    tdf = df[:<span class="hljs-number">-1</span>]
+    distinct_values = sorted(set(tdf[<span class="hljs-string">'chi2'</span>]), reverse=<span class="hljs-literal">False</span>)
+
+    col_names =  [feature,<span class="hljs-string">'Iris-setosa'</span>, <span class="hljs-string">'Iris-versicolor'</span>, 
+                  <span class="hljs-string">'Iris-virginica'</span>,<span class="hljs-string">'chi2'</span>]
+    updated_df  = pd.DataFrame(columns = col_names)  <span class="hljs-comment">#加入卡方值，生成新的数组</span>
     
-tree = supervised_bins_Transformer(task=<span class="hljs-string">'Classification'</span>, method=<span class="hljs-string">'xgboost_tree'</span>)
-tree.fit(X,y)
-tree.transform(X)</code></pre>
+    updated_df_index=<span class="hljs-number">0</span>
+    <span class="hljs-keyword">for</span> index, row <span class="hljs-keyword">in</span> df.iterrows(): 
+        <span class="hljs-keyword">if</span>(index==<span class="hljs-number">0</span>):
+            updated_df.loc[len(updated_df)] = df.loc[index]
+            updated_df_index+=<span class="hljs-number">1</span>
+        <span class="hljs-keyword">else</span>:
+            <span class="hljs-keyword">if</span>(df.loc[index<span class="hljs-number">-1</span>][<span class="hljs-string">'chi2'</span>]==distinct_values[<span class="hljs-number">0</span>]):
+                updated_df.loc[updated_df_index<span class="hljs-number">-1</span>][<span class="hljs-string">'Iris-setosa'</span>]+=df.loc[index][<span class="hljs-string">'Iris-setosa'</span>]
+                updated_df.loc[updated_df_index<span class="hljs-number">-1</span>][<span class="hljs-string">'Iris-versicolor'</span>]+=df.loc[index][<span class="hljs-string">'Iris-versicolor'</span>]
+                updated_df.loc[updated_df_index<span class="hljs-number">-1</span>][<span class="hljs-string">'Iris-virginica'</span>]+=df.loc[index][<span class="hljs-string">'Iris-virginica'</span>]
+            <span class="hljs-keyword">else</span>:
+                updated_df.loc[len(updated_df)] = df.loc[index]
+                updated_df_index+=<span class="hljs-number">1</span>
+                
+    updated_df[<span class="hljs-string">'chi2'</span>] = <span class="hljs-number">0.</span>  
+
+    <span class="hljs-keyword">return</span> updated_df
+        
+
+<span class="hljs-comment">#计算卡方值</span>
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">calc_chi2</span><span class="hljs-params">(array)</span>:</span>
+    shape = array.shape
+    n = float(array.sum())
+    row=&#123;&#125;
+    column=&#123;&#125;
+    
+    <span class="hljs-comment">#计算每行的和</span>
+    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> range(shape[<span class="hljs-number">0</span>]):
+        row[i] = array[i].sum()
+    
+    <span class="hljs-comment">#计算每列的和</span>
+    <span class="hljs-keyword">for</span> j <span class="hljs-keyword">in</span> range(shape[<span class="hljs-number">1</span>]):
+        column[j] = array[:,j].sum()
+
+    chi2 = <span class="hljs-number">0</span>
+    
+    <span class="hljs-comment">#卡方计算公式</span>
+    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> range(shape[<span class="hljs-number">0</span>]):
+        <span class="hljs-keyword">for</span> j <span class="hljs-keyword">in</span> range(shape[<span class="hljs-number">1</span>]):
+            eij = row[i]*column[j] / n 
+            oij = array[i,j]  
+            <span class="hljs-keyword">if</span> eij==<span class="hljs-number">0.</span>:
+                chi2 += <span class="hljs-number">0.</span>  <span class="hljs-comment">#确保不存在NaN值</span>
+            <span class="hljs-keyword">else</span>:
+                chi2 += math.pow((oij - eij),<span class="hljs-number">2</span>) / float(eij)
+  
+    <span class="hljs-keyword">return</span> chi2
+    
+<span class="hljs-comment">#计算每一个类别的卡方值</span>
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">update_chi2_column</span><span class="hljs-params">(contingency_table,feature)</span>:</span>
+    <span class="hljs-keyword">for</span> index, row <span class="hljs-keyword">in</span> contingency_table.iterrows():
+        <span class="hljs-keyword">if</span>(index!=contingency_table.shape[<span class="hljs-number">0</span>]<span class="hljs-number">-1</span>):
+            list1=[]
+            list2=[]
+            list1.append(contingency_table.loc[index][<span class="hljs-string">'Iris-setosa'</span>])
+            list1.append(contingency_table.loc[index][<span class="hljs-string">'Iris-versicolor'</span>])
+            list1.append(contingency_table.loc[index][<span class="hljs-string">'Iris-virginica'</span>])
+            list2.append(contingency_table.loc[index+<span class="hljs-number">1</span>][<span class="hljs-string">'Iris-setosa'</span>])
+            list2.append(contingency_table.loc[index+<span class="hljs-number">1</span>][<span class="hljs-string">'Iris-versicolor'</span>])
+            list2.append(contingency_table.loc[index+<span class="hljs-number">1</span>][<span class="hljs-string">'Iris-virginica'</span>])
+            prep_chi2 = np.array([np.array(list1),np.array(list2)])
+
+            c2 = calc_chi2(prep_chi2)
+
+            contingency_table.loc[index][<span class="hljs-string">'chi2'</span>] = c2
+    <span class="hljs-keyword">return</span> contingency_table
+
+
+<span class="hljs-comment">#计算频次表</span>
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">create_contingency_table</span><span class="hljs-params">(dataframe,feature)</span>:</span>
+    distinct_values = sorted(set(dataframe[feature]), reverse=<span class="hljs-literal">False</span>)
+    col_names =  [feature,<span class="hljs-string">'Iris-setosa'</span>, <span class="hljs-string">'Iris-versicolor'</span>,<span class="hljs-string">'Iris-virginica'</span>,<span class="hljs-string">'chi2'</span>]
+    my_contingency  = pd.DataFrame(columns = col_names)
+    
+    <span class="hljs-comment">#计算唯一值</span>
+    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> range(len(distinct_values)): 
+        temp_df=dataframe.loc[dataframe[feature]==distinct_values[i]]
+        count_dict = temp_df[<span class="hljs-string">"target_class"</span>].value_counts().to_dict()
+
+        setosa_count = <span class="hljs-number">0</span>
+        versicolor_count = <span class="hljs-number">0</span>
+        virginica_count = <span class="hljs-number">0</span>
+
+        <span class="hljs-keyword">if</span> <span class="hljs-string">'Iris-setosa'</span> <span class="hljs-keyword">in</span> count_dict:
+            setosa_count = count_dict[<span class="hljs-string">'Iris-setosa'</span>]
+        <span class="hljs-keyword">if</span> <span class="hljs-string">'Iris-versicolor'</span> <span class="hljs-keyword">in</span> count_dict:
+            versicolor_count = count_dict[<span class="hljs-string">'Iris-versicolor'</span>]
+        <span class="hljs-keyword">if</span> <span class="hljs-string">'Iris-virginica'</span> <span class="hljs-keyword">in</span> count_dict:
+            virginica_count = count_dict[<span class="hljs-string">'Iris-virginica'</span>]
+
+        new_row = [distinct_values[i],setosa_count,versicolor_count,virginica_count,<span class="hljs-number">0</span>]
+        my_contingency.loc[len(my_contingency)] = new_row
+
+    <span class="hljs-keyword">return</span> my_contingency
+
+
+<span class="hljs-comment">#ChiMerge</span>
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">chimerge</span><span class="hljs-params">(feature, data, max_interval)</span>:</span>
+    df = data.sort_values(by=[feature],ascending=<span class="hljs-literal">True</span>).reset_index()
+    
+    <span class="hljs-comment">#传入频次表</span>
+    contingency_table = create_contingency_table(df,feature)
+
+    <span class="hljs-comment">#计算初始间隔值</span>
+    num_intervals= contingency_table.shape[<span class="hljs-number">0</span>] 
+
+    <span class="hljs-comment">#是否满足最大间隔</span>
+    <span class="hljs-keyword">while</span> num_intervals &gt; max_interval: 
+        <span class="hljs-comment">#相邻列的卡方值</span>
+        chi2_df = update_chi2_column(contingency_table,feature) 
+        contingency_table = merge_rows(chi2_df,feature)
+        num_intervals= contingency_table.shape[<span class="hljs-number">0</span>]               
+
+    <span class="hljs-comment">#得出结果</span>
+    print(<span class="hljs-string">'The split points for '</span>+feature+<span class="hljs-string">' are:'</span>)
+    <span class="hljs-keyword">for</span> index, row <span class="hljs-keyword">in</span> contingency_table.iterrows():
+        print(contingency_table.loc[index][feature])
+    
+    print(<span class="hljs-string">'The final intervals for '</span>+feature+<span class="hljs-string">' are:'</span>)
+    <span class="hljs-keyword">for</span> index, row <span class="hljs-keyword">in</span> contingency_table.iterrows():
+        <span class="hljs-keyword">if</span>(index!=contingency_table.shape[<span class="hljs-number">0</span>]<span class="hljs-number">-1</span>):
+            <span class="hljs-keyword">for</span> index2, row2 <span class="hljs-keyword">in</span> df.iterrows():
+                <span class="hljs-keyword">if</span> df.loc[index2][feature]&lt;contingency_table.loc[index+<span class="hljs-number">1</span>][feature]:
+                    temp = df.loc[index2][feature]
+        <span class="hljs-keyword">else</span>:
+            temp = df[feature].iloc[<span class="hljs-number">-1</span>]
+        print(<span class="hljs-string">"["</span>+str(contingency_table.loc[index][feature])+<span class="hljs-string">","</span>+str(temp)+<span class="hljs-string">"]"</span>)
+    print(<span class="hljs-string">" "</span>)
+
+    
+
+<span class="hljs-keyword">if</span> __name__==<span class="hljs-string">'__main__'</span>:
+    <span class="hljs-keyword">for</span> feature <span class="hljs-keyword">in</span> [<span class="hljs-string">'sepal_length'</span>, <span class="hljs-string">'sepal_width'</span>, <span class="hljs-string">'petal_length'</span>,<span class="hljs-string">'petal_width'</span>]:
+        chimerge(feature=feature, data=iris, max_interval=<span class="hljs-number">6</span>)</code></pre>
 
 <h2 id="特征斜度处理"><a href="#特征斜度处理" class="headerlink" title="特征斜度处理"></a>特征斜度处理</h2><p>使用skew判断斜度，然后Compute the Box-Cox transformation of boxcox_normmax</p>
 <pre><code class="hljs python"><span class="hljs-comment">#修改斜度特征</span>
