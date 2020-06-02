@@ -143,7 +143,7 @@
                   
                   <span class="post-meta mr-2">
                     <i class="iconfont icon-chart"></i>
-                    825 字
+                    859 字
                   </span>
                 
 
@@ -153,7 +153,7 @@
                       <i class="iconfont icon-clock-fill"></i>
                     
                     
-                    11
+                    12
                      分钟
                   </span>
                 
@@ -202,25 +202,24 @@
 <li><strong>采用 GBDT 而非 RF</strong></li>
 </ul>
 <p>RF 也是多棵树，但从效果上有实践证明不如 GBDT。且 GBDT 前面的树，特征分裂主要体现对多数样本有区分度的特征；后面的树，主要体现的是经过前 N 颗树，残差仍然较大的少数样本。优先选用在整体上有区分度的特征，再选用针对少数样本有区分度的特征，思路更加合理，这应该也是用 GBDT 的原因。</p>
-<h4 id="实现代码"><a href="#实现代码" class="headerlink" title="实现代码"></a>实现代码</h4><pre><code class="hljs python"><span class="hljs-keyword">import</span> category_encoders <span class="hljs-keyword">as</span> ce
-<span class="hljs-keyword">from</span> sklearn.ensemble <span class="hljs-keyword">import</span> GradientBoostingClassifier
+<h4 id="实现代码"><a href="#实现代码" class="headerlink" title="实现代码"></a>实现代码</h4><pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.ensemble <span class="hljs-keyword">import</span> GradientBoostingClassifier
 <span class="hljs-keyword">from</span> sklearn.linear_model <span class="hljs-keyword">import</span> LogisticRegression
+<span class="hljs-keyword">from</span> sklearn.preprocessing <span class="hljs-keyword">import</span> OneHotEncoder
+
 <span class="hljs-comment"># 训练GBDT模型</span>
 gbdt = GradientBoostingClassifier(n_estimators=<span class="hljs-number">100</span>)  <span class="hljs-comment">#100颗树生成100个特征</span>
 gbdt.fit(data[col],data[<span class="hljs-string">'Label'</span>])
 <span class="hljs-comment"># 对GBDT预测结果进行onehot编码</span>
-onehot = ce.OneHotEncoder(col)
-onehot = onehot.fit_transform(gbdt.apply(data[col])[:, :, <span class="hljs-number">0</span>])
+onehot = OneHotEncoder()
+onehot1 = onehot.fit_transform(gbdt.apply(data[col])[:, :, <span class="hljs-number">0</span>])
+test_onehot = onehot.transform(gbdt.apply(test[col])[:, :, <span class="hljs-number">0</span>])
 <span class="hljs-comment"># 训练LR模型</span>
 lr = LogisticRegression()
-lr.fit(onehot.transform(gbdt.apply(X_train)[:, :, <span class="hljs-number">0</span>]), Y_train)
+lr.fit(onehot1, Y_train)
 <span class="hljs-comment"># 测试集预测</span>
-Y_pred = lr.predict_proba(onehot.transform(gbdt.apply(X_test)[:, :, <span class="hljs-number">0</span>]))[:, <span class="hljs-number">1</span>]</code></pre>
+Y_pred = lr.predict_proba(test_onehot)[:, <span class="hljs-number">1</span>]</code></pre>
 
-
-
-
-
+<p>原文论文谈到GBDT的参数，树的数量最多500颗（500以上就没有提升了），每棵树的节点不多于12。</p>
 
             </article>
             <hr>
