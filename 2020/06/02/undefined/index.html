@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="坚持分享知识，坚持留言支持">
+  <meta name="author" content="WeiChenLong">
+  <meta name="keywords" content="Python 机器学习 深度学习">
+  <title>XGBoost调参演示 - WeiChenLong&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.0.0/styles/github-gist.min.css" />
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_fmb4a04yx8h.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_pjno9b9zyxs.css">
+
+
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>WeiCl'blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">
+              <i class="iconfont icon-home-fill"></i>
+              首页</a>
+          </li>
+        
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">
+              <i class="iconfont icon-archive-fill"></i>
+              归档</a>
+          </li>
+        
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/categories/">
+              <i class="iconfont icon-category-fill"></i>
+              分类</a>
+          </li>
+        
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">
+              <i class="iconfont icon-tags-fill"></i>
+              标签</a>
+          </li>
+        
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">
+              <i class="iconfont icon-user-fill"></i>
+              关于</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <div class="mt-3 post-meta">
+                  <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+                  <time datetime="2020-06-02 18:23">
+                    2020年6月2日 晚上
+                  </time>
+                </div>
+              
+
+              <div class="mt-1">
+                
+                  
+                  <span class="post-meta mr-2">
+                    <i class="iconfont icon-chart"></i>
+                    1.4k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta mr-2">
+                      <i class="iconfont icon-clock-fill"></i>
+                    
+                    
+                    27
+                     分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="iconfont icon-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </div>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <article class="markdown-body">
+              <h2 id="XGBoost调参演示"><a href="#XGBoost调参演示" class="headerlink" title="XGBoost调参演示"></a>XGBoost调参演示</h2><p><a href="https://github.com/lytforgood/MachineLearningTrick" target="_blank" rel="noopener">本文参考</a></p>
+<h4 id="导入模型库"><a href="#导入模型库" class="headerlink" title="导入模型库"></a>导入模型库</h4><pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.model_selection <span class="hljs-keyword">import</span> train_test_split
+<span class="hljs-keyword">from</span> sklearn <span class="hljs-keyword">import</span> metrics
+<span class="hljs-keyword">from</span> sklearn.datasets <span class="hljs-keyword">import</span> make_hastie_10_2
+<span class="hljs-keyword">from</span> sklearn.ensemble <span class="hljs-keyword">import</span> GradientBoostingClassifier
+<span class="hljs-keyword">from</span> xgboost.sklearn <span class="hljs-keyword">import</span> XGBClassifier
+<span class="hljs-comment">#载入示例数据 10维度</span>
+X, y = make_hastie_10_2(random_state=<span class="hljs-number">0</span>)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=<span class="hljs-number">0.5</span>, random_state=<span class="hljs-number">0</span>)<span class="hljs-comment">##test_size测试集合所占比例</span></code></pre>
+
+<h4 id="默认GBDT参数"><a href="#默认GBDT参数" class="headerlink" title="默认GBDT参数"></a>默认GBDT参数</h4><pre><code class="hljs python">clf = GradientBoostingClassifier()
+clf.fit(X_train, y_train)
+y_pre= clf.predict(X_test)
+y_pro= clf.predict_proba(X_test)[:,<span class="hljs-number">1</span>] 
+<span class="hljs-keyword">print</span> (<span class="hljs-string">"AUC Score : %f"</span> % metrics.roc_auc_score(y_test, y_pro))
+<span class="hljs-keyword">print</span> (<span class="hljs-string">"Accuracy : %.4g"</span> % metrics.accuracy_score(y_test, y_pre))
+
+AUC Score : <span class="hljs-number">0.974248</span>
+Accuracy : <span class="hljs-number">0.8995</span></code></pre>
+
+<h4 id="默认XGBoost参数"><a href="#默认XGBoost参数" class="headerlink" title="默认XGBoost参数"></a>默认XGBoost参数</h4><pre><code class="hljs python">auc_Score=[]
+accuracy=[]
+clf = XGBClassifier()
+clf.fit(X_train, y_train)
+y_pre= clf.predict(X_test)
+y_pro= clf.predict_proba(X_test)[:,<span class="hljs-number">1</span>] 
+<span class="hljs-keyword">print</span> (<span class="hljs-string">"AUC Score : %f"</span> % metrics.roc_auc_score(y_test, y_pro))
+<span class="hljs-keyword">print</span> (<span class="hljs-string">"Accuracy : %.4g"</span> % metrics.accuracy_score(y_test, y_pre))
+auc_Score.append(metrics.roc_auc_score(y_test, y_pro))
+accuracy.append(metrics.accuracy_score(y_test, y_pre))
+
+AUC Score : <span class="hljs-number">0.972424</span>
+Accuracy : <span class="hljs-number">0.8993</span></code></pre>
+
+<h4 id="调整XGBoost参数"><a href="#调整XGBoost参数" class="headerlink" title="调整XGBoost参数"></a>调整XGBoost参数</h4><p>第一步：初始学习速率0.1和tree_based参数调优的估计器数目100。</p>
+<p>给其他参数一个初始值。</p>
+<ul>
+<li>max_depth = 5 :默认6树的最大深度，这个参数的取值最好在3-10之间。</li>
+<li>min_child_weight = 1:默认是1决定最小叶子节点样本权重和。如果是一个极不平衡的分类问题，某些叶子节点下的值会比较小，这个值取小点。</li>
+<li>gamma = 0: 默认0，在0.1到0.2之间就可以。树的叶子节点上作进一步分裂所需的最小损失减少。这个参数后继也是要调整的。</li>
+<li>subsample, colsample_bytree = 0.8: 样本采样、列采样。典型值的范围在0.5-0.9之间。</li>
+<li>scale_pos_weight = 1:默认1,如果类别十分不平衡取较大正值。 </li>
+</ul>
+<pre><code class="hljs python">clf = XGBClassifier(
+         learning_rate =<span class="hljs-number">0.1</span>, <span class="hljs-comment">#默认0.3</span>
+         n_estimators=<span class="hljs-number">100</span>, <span class="hljs-comment">#树的个数</span>
+         max_depth=<span class="hljs-number">5</span>,
+         min_child_weight=<span class="hljs-number">1</span>,
+         gamma=<span class="hljs-number">0</span>,
+         subsample=<span class="hljs-number">0.8</span>,
+         colsample_bytree=<span class="hljs-number">0.8</span>,
+         objective= <span class="hljs-string">'binary:logistic'</span>, <span class="hljs-comment">#逻辑回归损失函数</span>
+         nthread=<span class="hljs-number">4</span>,  <span class="hljs-comment">#cpu线程数</span>
+         scale_pos_weight=<span class="hljs-number">1</span>,
+         seed=<span class="hljs-number">27</span>)  <span class="hljs-comment">#随机种子</span>
+clf.fit(X_train, y_train)
+y_pre= clf.predict(X_test)
+y_pro= clf.predict_proba(X_test)[:,<span class="hljs-number">1</span>] 
+<span class="hljs-keyword">print</span> (<span class="hljs-string">"AUC Score : %f"</span> % metrics.roc_auc_score(y_test, y_pro))
+<span class="hljs-keyword">print</span> (<span class="hljs-string">"Accuracy : %.4g"</span> % metrics.accuracy_score(y_test, y_pre)) 
+auc_Score.append(metrics.roc_auc_score(y_test, y_pro))
+accuracy.append(metrics.accuracy_score(y_test, y_pre))
+
+AUC Score : <span class="hljs-number">0.978546</span>
+Accuracy : <span class="hljs-number">0.9133</span></code></pre>
+
+<p>‘n_estimators’:[100,200,500,1000,1500] ，取1000最好</p>
+<pre><code class="hljs python">clf = XGBClassifier(
+         learning_rate =<span class="hljs-number">0.1</span>, <span class="hljs-comment">#默认0.3</span>
+         n_estimators=<span class="hljs-number">1000</span>, <span class="hljs-comment">#树的个数</span>
+         max_depth=<span class="hljs-number">5</span>,
+         min_child_weight=<span class="hljs-number">1</span>,
+         gamma=<span class="hljs-number">0</span>,
+         subsample=<span class="hljs-number">0.8</span>,
+         colsample_bytree=<span class="hljs-number">0.8</span>,
+         objective= <span class="hljs-string">'binary:logistic'</span>, <span class="hljs-comment">#逻辑回归损失函数</span>
+         nthread=<span class="hljs-number">4</span>,  <span class="hljs-comment">#cpu线程数</span>
+         scale_pos_weight=<span class="hljs-number">1</span>,
+         seed=<span class="hljs-number">27</span>)  <span class="hljs-comment">#随机种子</span>
+clf.fit(X_train, y_train)
+y_pre= clf.predict(X_test)
+y_pro= clf.predict_proba(X_test)[:,<span class="hljs-number">1</span>] 
+<span class="hljs-keyword">print</span> (<span class="hljs-string">"AUC Score : %f"</span> % metrics.roc_auc_score(y_test, y_pro))
+<span class="hljs-keyword">print</span> (<span class="hljs-string">"Accuracy : %.4g"</span> % metrics.accuracy_score(y_test, y_pre)) 
+auc_Score.append(metrics.roc_auc_score(y_test, y_pro))
+accuracy.append(metrics.accuracy_score(y_test, y_pre))
+
+AUC Score : <span class="hljs-number">0.992504</span>
+Accuracy : <span class="hljs-number">0.954</span></code></pre>
+
+<p>第二步： max_depth 和 min_weight 它们对最终结果有很大的影响</p>
+<p>max_depth range(3,10,2)=[3, 5, 7, 9]</p>
+<p>min_weight range(1,6,2)=[1, 3, 5]</p>
+<p>max_depth=3  min_weight=1 最好</p>
+<pre><code class="hljs python">clf = XGBClassifier(
+         learning_rate =<span class="hljs-number">0.1</span>, <span class="hljs-comment">#默认0.3</span>
+         n_estimators=<span class="hljs-number">1000</span>, <span class="hljs-comment">#树的个数</span>
+         max_depth=<span class="hljs-number">3</span>,
+         min_child_weight=<span class="hljs-number">1</span>,
+         gamma=<span class="hljs-number">0</span>,
+         subsample=<span class="hljs-number">0.8</span>,
+         colsample_bytree=<span class="hljs-number">0.8</span>,
+         objective= <span class="hljs-string">'binary:logistic'</span>, <span class="hljs-comment">#逻辑回归损失函数</span>
+         nthread=<span class="hljs-number">4</span>,  <span class="hljs-comment">#cpu线程数</span>
+         scale_pos_weight=<span class="hljs-number">1</span>,
+         seed=<span class="hljs-number">27</span>)  <span class="hljs-comment">#随机种子</span>
+clf.fit(X_train, y_train)
+y_pre= clf.predict(X_test)
+y_pro= clf.predict_proba(X_test)[:,<span class="hljs-number">1</span>] 
+<span class="hljs-keyword">print</span> (<span class="hljs-string">"AUC Score : %f"</span> % metrics.roc_auc_score(y_test, y_pro))
+<span class="hljs-keyword">print</span> (<span class="hljs-string">"Accuracy : %.4g"</span> % metrics.accuracy_score(y_test, y_pre)) 
+auc_Score.append(metrics.roc_auc_score(y_test, y_pro))
+accuracy.append(metrics.accuracy_score(y_test, y_pre))</code></pre>
+
+<pre><code>AUC Score : 0.991693
+Accuracy : 0.9485</code></pre><p>第三步：gamma参数调优</p>
+<p>‘gamma’:[i/10.0 for i in range(0,7)]=[0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6]</p>
+<p>gamma=0.5 最好</p>
+<pre><code class="hljs python">clf = XGBClassifier(
+ learning_rate =<span class="hljs-number">0.1</span>, <span class="hljs-comment">#默认0.3</span>
+ n_estimators=<span class="hljs-number">1000</span>, <span class="hljs-comment">#树的个数</span>
+ max_depth=<span class="hljs-number">3</span>,
+ min_child_weight=<span class="hljs-number">1</span>,
+ gamma=<span class="hljs-number">0.5</span>,
+ subsample=<span class="hljs-number">0.8</span>,
+ colsample_bytree=<span class="hljs-number">0.8</span>,
+ objective= <span class="hljs-string">'binary:logistic'</span>, <span class="hljs-comment">#逻辑回归损失函数</span>
+ nthread=<span class="hljs-number">4</span>,  <span class="hljs-comment">#cpu线程数</span>
+ scale_pos_weight=<span class="hljs-number">1</span>,
+ seed=<span class="hljs-number">27</span>)  <span class="hljs-comment">#随机种子</span>
+clf.fit(X_train, y_train)
+y_pre= clf.predict(X_test)
+y_pro= clf.predict_proba(X_test)[:,<span class="hljs-number">1</span>] 
+<span class="hljs-keyword">print</span> (<span class="hljs-string">"AUC Score : %f"</span> % metrics.roc_auc_score(y_test, y_pro))
+<span class="hljs-keyword">print</span> (<span class="hljs-string">"Accuracy : %.4g"</span> % metrics.accuracy_score(y_test, y_pre)) 
+auc_Score.append(metrics.roc_auc_score(y_test, y_pro))
+accuracy.append(metrics.accuracy_score(y_test, y_pre))</code></pre>
+
+<pre><code>AUC Score : 0.991749
+Accuracy : 0.9497</code></pre><p>第四步：调整subsample 和 colsample_bytree 参数</p>
+<p> ‘subsample’:[i/10.0 for i in range(6,10)]=[0.6, 0.7, 0.8, 0.9]</p>
+<p> ‘colsample_bytree’:[i/10.0 for i in range(6,10)]=[0.6, 0.7, 0.8, 0.9]</p>
+<p> ‘subsample’: 0.6, ‘colsample_bytree’: 0.6 最好</p>
+<pre><code class="hljs python">clf = XGBClassifier(
+ learning_rate =<span class="hljs-number">0.1</span>, <span class="hljs-comment">#默认0.3</span>
+ n_estimators=<span class="hljs-number">1000</span>, <span class="hljs-comment">#树的个数</span>
+ max_depth=<span class="hljs-number">3</span>,
+ min_child_weight=<span class="hljs-number">1</span>,
+ gamma=<span class="hljs-number">0.5</span>,
+ subsample=<span class="hljs-number">0.6</span>,
+ colsample_bytree=<span class="hljs-number">0.6</span>,
+ objective= <span class="hljs-string">'binary:logistic'</span>, <span class="hljs-comment">#逻辑回归损失函数</span>
+ nthread=<span class="hljs-number">4</span>,  <span class="hljs-comment">#cpu线程数</span>
+ scale_pos_weight=<span class="hljs-number">1</span>,
+ seed=<span class="hljs-number">27</span>)  <span class="hljs-comment">#随机种子</span>
+clf.fit(X_train, y_train)
+y_pre= clf.predict(X_test)
+y_pro= clf.predict_proba(X_test)[:,<span class="hljs-number">1</span>] 
+<span class="hljs-keyword">print</span> (<span class="hljs-string">"AUC Score : %f"</span> % metrics.roc_auc_score(y_test, y_pro))
+<span class="hljs-keyword">print</span> (<span class="hljs-string">"Accuracy : %.4g"</span> % metrics.accuracy_score(y_test, y_pre)) 
+auc_Score.append(metrics.roc_auc_score(y_test, y_pro))
+accuracy.append(metrics.accuracy_score(y_test, y_pre))</code></pre>
+
+<pre><code>AUC Score : 0.992504
+Accuracy : 0.954</code></pre><p>第五步：正则化参数调优</p>
+<p>‘reg_alpha’:[1e-5, 1e-2, 0.1, 1, 100]=[1e-05, 0.01, 0.1, 1, 100] 默认0 L1正则项参数，参数值越大，模型越不容易过拟合</p>
+<p>‘reg_lambda’:[1,5,10,50]        默认1L2正则项参数，参数值越大，模型越不容易过拟合</p>
+<p>{‘reg_alpha’: 1e-05, ‘reg_lambda’: 1}  正则变化不大</p>
+<pre><code class="hljs python">clf = XGBClassifier(
+ learning_rate =<span class="hljs-number">0.1</span>, <span class="hljs-comment">#默认0.3</span>
+ n_estimators=<span class="hljs-number">1000</span>, <span class="hljs-comment">#树的个数</span>
+ max_depth=<span class="hljs-number">3</span>,
+ min_child_weight=<span class="hljs-number">1</span>,
+ gamma=<span class="hljs-number">0.5</span>,
+ subsample=<span class="hljs-number">0.6</span>,
+ colsample_bytree=<span class="hljs-number">0.6</span>,
+ objective= <span class="hljs-string">'binary:logistic'</span>, <span class="hljs-comment">#逻辑回归损失函数</span>
+ nthread=<span class="hljs-number">4</span>,  <span class="hljs-comment">#cpu线程数</span>
+ scale_pos_weight=<span class="hljs-number">1</span>,
+ reg_alpha=<span class="hljs-number">1e-05</span>,
+ reg_lambda=<span class="hljs-number">1</span>,
+ seed=<span class="hljs-number">27</span>)  <span class="hljs-comment">#随机种子</span>
+clf.fit(X_train, y_train)
+y_pre= clf.predict(X_test)
+y_pro= clf.predict_proba(X_test)[:,<span class="hljs-number">1</span>] 
+<span class="hljs-keyword">print</span> (<span class="hljs-string">"AUC Score : %f"</span> % metrics.roc_auc_score(y_test, y_pro))
+<span class="hljs-keyword">print</span> (<span class="hljs-string">"Accuracy : %.4g"</span> % metrics.accuracy_score(y_test, y_pre)) 
+auc_Score.append(metrics.roc_auc_score(y_test, y_pro))
+accuracy.append(metrics.accuracy_score(y_test, y_pre))</code></pre>
+
+<pre><code>AUC Score : 0.992504
+Accuracy : 0.954</code></pre><p>第6步：进一步 降低学习速率 增加更多的树</p>
+<p>‘learning_rate’:[0.01,0.1,0.3]</p>
+<p>‘learning_rate’: 0.1 不变</p>
+<p>‘n_estimators’:[1000,1200,1500,2000,2500]</p>
+<p>‘n_estimators’: 2000 较好</p>
+<pre><code class="hljs python">clf = XGBClassifier(
+         learning_rate =<span class="hljs-number">0.1</span>, <span class="hljs-comment">#默认0.3</span>
+         n_estimators=<span class="hljs-number">2000</span>, <span class="hljs-comment">#树的个数</span>
+         max_depth=<span class="hljs-number">3</span>,
+         min_child_weight=<span class="hljs-number">1</span>,
+         gamma=<span class="hljs-number">0.5</span>,
+         subsample=<span class="hljs-number">0.6</span>,
+         colsample_bytree=<span class="hljs-number">0.6</span>,
+         objective= <span class="hljs-string">'binary:logistic'</span>, <span class="hljs-comment">#逻辑回归损失函数</span>
+         nthread=<span class="hljs-number">4</span>,  <span class="hljs-comment">#cpu线程数</span>
+         scale_pos_weight=<span class="hljs-number">1</span>,
+         reg_alpha=<span class="hljs-number">1e-05</span>,
+         reg_lambda=<span class="hljs-number">1</span>,
+         seed=<span class="hljs-number">27</span>)  <span class="hljs-comment">#随机种子</span>
+clf.fit(X_train, y_train)
+y_pre= clf.predict(X_test)
+y_pro= clf.predict_proba(X_test)[:,<span class="hljs-number">1</span>] 
+<span class="hljs-keyword">print</span> (<span class="hljs-string">"AUC Score : %f"</span> % metrics.roc_auc_score(y_test, y_pro))
+<span class="hljs-keyword">print</span> (<span class="hljs-string">"Accuracy : %.4g"</span> % metrics.accuracy_score(y_test, y_pre)) 
+auc_Score.append(metrics.roc_auc_score(y_test, y_pro))
+accuracy.append(metrics.accuracy_score(y_test, y_pre))
+
+AUC Score : <span class="hljs-number">0.993114</span>
+Accuracy : <span class="hljs-number">0.957</span></code></pre>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            </article>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E6%95%B0%E6%8D%AE%E6%8C%96%E6%8E%98/">数据挖掘</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" target="_blank" rel="nofollow noopener noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-6">
+                    
+                    
+                  </div>
+                  <div class="post-next col-6">
+                    
+                    
+                      <a href="/2020/06/01/undefined/">
+                        <span class="hidden-mobile">GBDT特征+LR</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <div class="comments" id="comments">
+                
+                
+  <div id="vcomments"></div>
+  <script defer src="https://cdn.staticfile.org/valine/1.4.14/Valine.min.js" ></script>
+
+  <script type="text/javascript">
+    var oldLoadVa = window.onload;
+    window.onload = function () {
+      oldLoadVa && oldLoadVa();
+
+      new Valine({
+        el: "#vcomments",
+        app_id: "vlgtQ35JA02DviH42D5xO7DA-gzGzoHsz",
+        app_key: "E4PyoDjEuOj4oRJoSa5F4i05",
+        placeholder: "说点什么",
+        path: window.location.pathname,
+        avatar: "retro",
+        meta: ["nick","mail"],
+        pageSize: "10",
+        lang: "zh-CN",
+        highlight: true,
+        recordIP: true,
+        serverURLs: "",
+      });
+    };
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="https://valine.js.org" target="_blank" rel="nofollow noopener noopener">comments
+      powered by Valine.</a></noscript>
+
+
+              </div>
+            
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a id="scroll-top-button" href="#" role="button">
+      <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener">
+        <span>Fluid</span></a>
+    </div>
+    
+  <div>
+    
+      <!-- 不蒜子统计PV -->
+      
+      <span id="busuanzi_container_site_pv" style="display: none">
+      总访问量 <span id="busuanzi_value_site_pv"></span> 次
+    </span>
+    
+    
+      <!-- 不蒜子统计UV -->
+      
+      <span id="busuanzi_container_site_uv" style="display: none">
+      总访客数 <span id="busuanzi_value_site_uv"></span> 人
+    </span>
+    
+  </div>
+
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.11.1/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        collapseDepth: 0,
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc').css('visibility', 'visible');
+      }
+    });
+  </script>
+
+
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+  
+
+  
+    <!-- Google Analytics -->
+    <script defer>
+      (function (i, s, o, g, r, a, m) {
+        i['GoogleAnalyticsObject'] = r;
+        i[r] = i[r] || function () {
+          (i[r].q = i[r].q || []).push(arguments)
+        }, i[r].l = 1 * new Date();
+        a = s.createElement(o),
+          m = s.getElementsByTagName(o)[0];
+        a.async = 1;
+        a.src = g;
+        m.parentNode.insertBefore(a, m)
+      })(window, document, 'script', 'https://www.google-analytics.com/analytics.js', 'ga');
+
+      ga('create', 'UA-167761233-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "XGBoost调参演示&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      searchFunc(path, 'local-search-input', 'local-search-result');
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+  <script>
+    $('#post img:not(.no-zoom img, img[no-zoom]), img[zoom]').each(
+      function () {
+        var element = document.createElement('a');
+        $(element).attr('data-fancybox', 'images');
+        $(element).attr('href', $(this).attr('src'));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript">
+      //定义获取词语下标
+      var a_idx = 0;
+      jQuery(document).ready(function ($) {
+        //点击body时触发事件
+        $("body").click(function (e) {
+          //需要显示的词语
+          var a = new Array("富强", "民主", "文明", "和谐", "自由", "平等", "公正", "法治", "爱国", "敬业", "诚信", "友善");
+          //设置词语给span标签
+          var $i = $("<span/>").text(a[a_idx]);
+          //下标等于原来下标+1  余 词语总数
+          a_idx = (a_idx + 1) % a.length;
+          //获取鼠标指针的位置，分别相对于文档的左和右边缘。
+          //获取x和y的指针坐标
+          var x = e.pageX, y = e.pageY;
+          //在鼠标的指针的位置给$i定义的span标签添加css样式
+          $i.css({
+            "z-index": 999,
+            "top": y - 20,
+            "left": x,
+            "position": "absolute",
+            "font-weight": "bold",
+            "color": rand_color()
+          });
+          // 随机颜色
+          function rand_color() {
+            return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")"
+          }
+          //在body添加这个标签
+          $("body").append($i);
+          //animate() 方法执行 CSS 属性集的自定义动画。
+          //该方法通过CSS样式将元素从一个状态改变为另一个状态。CSS属性值是逐渐改变的，这样就可以创建动画效果。
+          //详情请看http://www.w3school.com.cn/jquery/effect_animate.asp
+          $i.animate({
+            //将原来的位置向上移动180
+            "top": y - 180,
+            "opacity": 0
+            //1500动画的速度
+          }, 1500, function () {
+            //时间到了自动删除
+            $i.remove();
+          });
+        });
+      })
+      ;
+    </script>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>
