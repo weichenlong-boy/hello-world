@@ -501,6 +501,55 @@ the space over which to se</div>
     
     
     <div class="col-12 col-md-12 mx-auto index-info">
+      <a class="index-header" href="/2020/05/24/undefined/">Python 10个习惯用法</a>
+
+      <a href="/2020/05/24/undefined/" class="index-excerpt">
+        
+        
+          
+        
+        <div>1、 if not x直接使用 x 和 not x 判断 x 是否为 None 或空
+x = [1,3,5]
+if x:
+    print('x is not empty ')
+if not x:
+    print('x is empty')
+
+2、enumerate 枚举直接使用 enumerate 枚举容器，第二个参数表示索引的起始值
+x = [1, 3, 5]
+for i, e in e</div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>&nbsp;2020-05-24
+          </div>
+        
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/Python/">Python</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/python%E7%BB%83%E4%B9%A0/">python练习</a>
+            
+          </div>
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <div class="col-12 col-md-12 mx-auto index-info">
       <a class="index-header" href="/2020/05/22/undefined/">模型融合</a>
 
       <a href="/2020/05/22/undefined/" class="index-excerpt">
@@ -542,56 +591,19 @@ the space over which to se</div>
     </div>
   </div>
 
-  <div class="row mx-auto index-card">
-    
-    
-    <div class="col-12 col-md-12 mx-auto index-info">
-      <a class="index-header" href="/2019/05/21/undefined/">连续特征处理</a>
-
-      <a href="/2019/05/21/undefined/" class="index-excerpt">
-        
-        
-          
-        
-        <div>连续特征离散化为什么要对连续变量进行离散化
-捕捉非线性效应
-方便捕捉交叉效应—groupby
-可以减少过拟合的风险，因为分箱相当于对于数据去粗粒度描述
-离散化后可以提升模型的鲁棒性
-
-常见的离散化方法分箱方法等距分箱（pandas.cut）
-pd.cut(serise, [0, 2, 4, 6, 10, 10], labels=False)  #label指定标签
-
-等频分箱（pandas.qcu</div>
-      </a>
-
-      <div class="index-btm post-metas">
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-date"></i>&nbsp;2019-05-21
-          </div>
-        
-        
-          <div class="post-meta mr-3">
-            <i class="iconfont icon-category"></i>
-            
-              <a href="/categories/%E6%95%B0%E6%8D%AE%E6%8C%96%E6%8E%98/">数据挖掘</a>
-            
-          </div>
-        
-        
-          <div class="post-meta">
-            <i class="iconfont icon-tags"></i>
-            
-              <a href="/tags/%E7%89%B9%E5%BE%81%E5%B7%A5%E7%A8%8B/">特征工程</a>
-            
-          </div>
-        
-      </div>
-    </div>
-  </div>
 
 
+  <nav aria-label="navigation">
+    <span class="pagination" id="pagination">
+      <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/"><i class="iconfont icon-arrowright"></i></a>
+    </span>
+  </nav>
+  
+  <script>
+    for (ele of document.getElementById("pagination").getElementsByTagName("a")) {
+      ele.href += '#board';
+    }
+  </script>
 
 
 
