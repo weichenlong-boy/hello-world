@@ -275,18 +275,17 @@ results10 = stacker.validate(k=<span class="hljs-number">5</span>,scorer=mean_ab
 
 <p>手动实现：只创建一个基学习器为例</p>
 <pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.model_selection <span class="hljs-keyword">import</span> StratifiedKFold,KFold,RepeatedKFold
-<span class="hljs-keyword">import</span> xgboost <span class="hljs-keyword">as</span> xgb
+<span class="hljs-keyword">import</span> xgboost.sklearn <span class="hljs-keyword">import</span> XGBClassifier
 <span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np
 
 skf = StratifiedKFold(n_splits = <span class="hljs-number">5</span>, shuffle = <span class="hljs-literal">True</span> ,random_state=<span class="hljs-number">16</span>)
 oof_xgb = np.zeros(len(train))  <span class="hljs-comment">#创建数组</span>
 pre_xgb = np.zeros(len(test))
 
-<span class="hljs-keyword">for</span> k,(train_in,test_in) <span class="hljs-keyword">in</span> enumerate(skf.split(X,y)):
+<span class="hljs-keyword">for</span> k,(train_in,test_in) <span class="hljs-keyword">in</span> enumerate(skf.split(train,train_y)):
     X_train,X_test,y_train,y_test = X[train_in],X[test_in],y[train_in],y[test_in]
-    xgb_train = xgb.DMatrix(X_train, y_train)
-    xgb_eval = xgb.DMatrix(X_test, y_test)
-    xgb_params = &#123;<span class="hljs-string">'eta'</span>: <span class="hljs-number">0.008</span>, 
+    params = &#123;<span class="hljs-string">'learning_rate'</span>: <span class="hljs-number">0.008</span>, 
+              <span class="hljs-string">'n_estimators'</span>: <span class="hljs-number">1000</span>
               <span class="hljs-string">'max_depth'</span>: <span class="hljs-number">5</span>,
               <span class="hljs-string">'subsample'</span>: <span class="hljs-number">0.8</span>, 
               <span class="hljs-string">'colsample_bytree'</span>: <span class="hljs-number">0.8</span>, 
@@ -296,17 +295,13 @@ pre_xgb = np.zeros(len(test))
               <span class="hljs-string">'nthread'</span>: <span class="hljs-number">4</span>,
               &#125;
     <span class="hljs-comment"># train</span>
-    watchlist = [(xgb_train,<span class="hljs-string">'train'</span>),(xgb_eval,<span class="hljs-string">'val'</span>)] 
-    xgb_model = xgb.train(xgb_params,
-                    xgb_train,
-                    evals=watchlist,
-                    num_boost_round=<span class="hljs-number">40000</span>,
-                    early_stopping_rounds=<span class="hljs-number">50</span>,
-                    verbose_eval=<span class="hljs-number">100</span>)
+    clf = XGBClassifier(params)
+    clf.fit(trn_x, trn_y,eval_set=[(val_x, val_y)],eval_metric=<span class="hljs-string">'auc'</span>,early_stopping_rounds=<span class="hljs-number">100</span>,verbose=<span class="hljs-number">100</span>)
     print(<span class="hljs-string">'Start predicting...'</span>)
-    oof_xgb[test_in] = xgb_model.predict(xgb.DMatrix(X[test_in]), ntree_limit=xgb_model.best_ntree_limit)
-    pre_xgb += xgb_model.predict(xgb.DMatrix(test), ntree_limit=xgb_model.best_ntree_limit) / <span class="hljs-number">5</span>
-print(<span class="hljs-string">'xgb predict over'</span>)</code></pre>
+    oof_xgb[test_in] = clf.predict(X_test)
+    pre_xgb += clf.predict(test) / skf.n_splits
+    
+print(<span class="hljs-string">'XGB predict over'</span>)</code></pre>
 
 <h4 id="混合法（Blending）"><a href="#混合法（Blending）" class="headerlink" title="混合法（Blending）"></a>混合法（Blending）</h4><p><strong>基本思想：</strong>Blending采用了和stacking同样的方法，不过只从训练集中选择一个fold的结果，再和原始特征进行concat作为元学习器meta learner的特征，测试集上进行同样的操作。<br>把原始的训练集先分成两部分，比如70%的数据作为新的训练集，剩下30%的数据作为测试集。</p>
 <ul>
