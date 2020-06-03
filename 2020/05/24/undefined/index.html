@@ -143,7 +143,7 @@
                   
                   <span class="post-meta mr-2">
                     <i class="iconfont icon-chart"></i>
-                    590 字
+                    514 字
                   </span>
                 
 
@@ -153,7 +153,7 @@
                       <i class="iconfont icon-clock-fill"></i>
                     
                     
-                    10
+                    9
                      分钟
                   </span>
                 
@@ -189,7 +189,7 @@
           <div class="post-content mx-auto" id="post">
             
             <article class="markdown-body">
-              <h3 id="1、-if-not-x"><a href="#1、-if-not-x" class="headerlink" title="1、 if not x"></a>1、 if not x</h3><p>直接使用 x 和 not x 判断 x 是否为 None 或空</p>
+              <h2 id="Python-10个习惯用法"><a href="#Python-10个习惯用法" class="headerlink" title="Python 10个习惯用法"></a>Python 10个习惯用法</h2><h3 id="1、-if-not-x"><a href="#1、-if-not-x" class="headerlink" title="1、 if not x"></a>1、 if not x</h3><p>直接使用 x 和 not x 判断 x 是否为 None 或空</p>
 <pre><code class="hljs python">x = [<span class="hljs-number">1</span>,<span class="hljs-number">3</span>,<span class="hljs-number">5</span>]
 <span class="hljs-keyword">if</span> x:
     print(<span class="hljs-string">'x is not empty '</span>)
@@ -256,30 +256,18 @@ print(d)
 
 &#123;<span class="hljs-string">'a'</span>: <span class="hljs-number">1</span>, <span class="hljs-string">'b'</span>: <span class="hljs-number">3</span>, <span class="hljs-string">'c'</span>: <span class="hljs-number">5</span>&#125;</code></pre>
 
-<h3 id="10、-name-39-main-39-有啥用"><a href="#10、-name-39-main-39-有啥用" class="headerlink" title="10、__name__ == &#39;__main__&#39;有啥用"></a>10、<code>__name__ == &#39;__main__&#39;</code>有啥用</h3><p>曾几何时，看这别人代码这么写，我们也就跟着这么用吧，其实还没有完全弄清楚这行到底干啥。</p>
-<pre><code class="hljs python"><span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">mymain</span><span class="hljs-params">()</span>:</span>
-    print(<span class="hljs-string">'Doing something in module'</span>, __name__)
+<h3 id="10、使用any-all函数"><a href="#10、使用any-all函数" class="headerlink" title="10、使用any/all函数"></a>10、<strong>使用any/all函数</strong></h3><pre><code class="hljs python">all()方法的语法:
+all(iterable)</code></pre>
 
-<span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">'__main__'</span>:
-    print(<span class="hljs-string">'Executed from command line'</span>) 
-    mymain()</code></pre>
+<p>iterable – 元组或列表。<br>返回值：如果iterable的所有元素不为0、’’、False或者iterable为空，all(iterable)返回True，否则返回False；<br><strong>注意：空元组、空列表返回值为True，这里要特别注意。</strong></p>
+<pre><code class="hljs python">any()方法的语法:
+any(iterable)</code></pre>
 
-<p>加入上面脚本命名为 MyModule，不管在 vscode 还是 pycharm 直接启动，则直接打印出：</p>
-<pre><code class="hljs python">Executed <span class="hljs-keyword">from</span> command line
-Doing something <span class="hljs-keyword">in</span> module __main__</code></pre>
+<p>iterable – 元组或列表。<br>返回值：如果都为空、0、false，则返回false，如果不都为空、0、false，<strong>即有一个</strong>，则返回true。</p>
+<p>例子：</p>
+<pre><code class="hljs python"><span class="hljs-keyword">print</span> (any(c.isalnum()<span class="hljs-keyword">for</span> c <span class="hljs-keyword">in</span> s))</code></pre>
 
-<p>这并不奇怪，和我们预想一样，因为有无这句 <code>__main__</code> ，都会打印出这些。</p>
-<p>但是当我们 <code>import MyModule</code> 时，如果没有这句，直接就打印出：</p>
-<pre><code class="hljs python">In [<span class="hljs-number">2</span>]: <span class="hljs-keyword">import</span> MyModule
-Executed <span class="hljs-keyword">from</span> command line
-Doing something <span class="hljs-keyword">in</span> module MyModule</code></pre>
 
-<p>只是导入就直接执行 mymain 函数，这不符合我们预期。</p>
-<p>如果有主句，导入后符合预期：</p>
-<pre><code class="hljs python">In [<span class="hljs-number">6</span>]: <span class="hljs-keyword">import</span> MyModule
-
-In [<span class="hljs-number">7</span>]: MyModule.mymain()
-Doing something <span class="hljs-keyword">in</span> module MyModule</code></pre>
 
 
 
