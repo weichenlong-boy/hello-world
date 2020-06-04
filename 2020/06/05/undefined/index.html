@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="坚持分享知识，坚持留言支持">
+  <meta name="author" content="WeiChenLong">
+  <meta name="keywords" content="Python 机器学习 深度学习">
+  <title>常见损失函数和评价指标总结 - WeiChenLong&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+<link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.0.0/styles/github-gist.min.css" />
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_fmb4a04yx8h.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_pjno9b9zyxs.css">
+
+
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+<meta name="generator" content="Hexo 4.2.1"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>WeiCl'blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/">
+              <i class="iconfont icon-home-fill"></i>
+              首页</a>
+          </li>
+        
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/archives/">
+              <i class="iconfont icon-archive-fill"></i>
+              归档</a>
+          </li>
+        
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/categories/">
+              <i class="iconfont icon-category-fill"></i>
+              分类</a>
+          </li>
+        
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/tags/">
+              <i class="iconfont icon-tags-fill"></i>
+              标签</a>
+          </li>
+        
+          
+          
+          
+          <li class="nav-item">
+            <a class="nav-link" href="/about/">
+              <i class="iconfont icon-user-fill"></i>
+              关于</a>
+          </li>
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+                <div class="mt-3 post-meta">
+                  <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+                  <time datetime="2020-06-05 00:05">
+                    2020年6月5日 凌晨
+                  </time>
+                </div>
+              
+
+              <div class="mt-1">
+                
+                  
+                  <span class="post-meta mr-2">
+                    <i class="iconfont icon-chart"></i>
+                    2.5k 字
+                  </span>
+                
+
+                
+                  
+                  <span class="post-meta mr-2">
+                      <i class="iconfont icon-clock-fill"></i>
+                    
+                    
+                    36
+                     分钟
+                  </span>
+                
+
+                
+                  <!-- 不蒜子统计文章PV -->
+                  
+                  <span id="busuanzi_container_page_pv" class="post-meta" style="display: none">
+                    <i class="iconfont icon-eye" aria-hidden="true"></i>
+                    <span id="busuanzi_value_page_pv"></span> 次
+                  </span>
+                
+              </div>
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <article class="markdown-body">
+              <h1 id="常见损失函数和评价指标总结"><a href="#常见损失函数和评价指标总结" class="headerlink" title="常见损失函数和评价指标总结"></a>常见损失函数和评价指标总结</h1><h2 id="一、损失函数"><a href="#一、损失函数" class="headerlink" title="一、损失函数"></a>一、损失函数</h2><h3 id="1-1-回归问题"><a href="#1-1-回归问题" class="headerlink" title="1.1 回归问题"></a>1.1 回归问题</h3><h4 id="1-平方损失函数（最小二乘法）："><a href="#1-平方损失函数（最小二乘法）：" class="headerlink" title="1. 平方损失函数（最小二乘法）："></a>1. 平方损失函数（最小二乘法）：</h4><p><img src="/img/%E5%B9%B3%E5%9D%87%E6%8D%9F%E5%A4%B1%E5%87%BD%E6%95%B0.png" srcset="/img/loading.gif" alt="平均损失函数"></p>
+<p>回归问题中常用的损失函数，在线性回归中，可以通过极大似然估计（MLE）推导。计算的是预测值与真实值之间距离的平方和。实际更常用的是<strong>均方误差</strong>（Mean Squared Error-MSE）：</p>
+<p><img src="/img/%E5%9D%87%E6%96%B9%E8%AF%AF%E5%B7%AE.png" srcset="/img/loading.gif" alt="均方误差"></p>
+<h4 id="2-平均绝对值误差（L1）–-MAE："><a href="#2-平均绝对值误差（L1）–-MAE：" class="headerlink" title="2. 平均绝对值误差（L1）– MAE："></a>2. 平均绝对值误差（L1）– MAE：</h4><p><img src="/img/%E5%B9%B3%E5%9D%87%E7%BB%9D%E5%AF%B9%E5%80%BC%E8%AF%AF%E5%B7%AE.png" srcset="/img/loading.gif" alt="平均绝对值误"></p>
+<p>MAE是目标值和预测值之差的<strong>绝对值之和</strong>，可以用来衡量预测值和真实值的距离。<strong>但是它不能给出，模型的预测值是比真实值小还是大。</strong></p>
+<h4 id="3-MAE（L1）-VS-MSE（L2）："><a href="#3-MAE（L1）-VS-MSE（L2）：" class="headerlink" title="3. MAE（L1） VS MSE（L2）："></a>3. MAE（L1） VS MSE（L2）：</h4><ul>
+<li><strong>MSE计算简便，但MAE对异常点有更好的鲁棒性：</strong>当数据中存在异常点时，用MSE/RMSE计算损失的模型会以牺牲了其他样本的误差为代价，朝着减小异常点误差的方向更新。然而这就会降低模型的整体性能。</li>
+</ul>
+<blockquote>
+<p>直观上可以这样理解：如果我们最小化MSE来对所有的样本点只给出一个预测值，那么这个值一定是所有目标值的平均值。但如果是最小化MAE，那么这个值，则会是所有样本点目标值的中位数。众所周知，对异常值而言，中位数比均值更加鲁棒，因此MAE对于异常值也比MSE更稳定。</p>
+</blockquote>
+<ul>
+<li><p><strong>NN中MAE更新梯度始终相同，而MSE则不同：</strong>MSE损失的梯度随损失增大而增大，而损失趋于0时则会减小。</p>
+</li>
+<li><p><strong>Loss选择建议：</strong></p>
+</li>
+<li><ul>
+<li><strong>MSE：</strong>如果异常点代表在商业中很重要的异常情况，并且需要被检测出来</li>
+<li><strong>MAE：</strong>如果只把异常值当作受损数据</li>
+</ul>
+</li>
+</ul>
+<h4 id="4-Huber损失："><a href="#4-Huber损失：" class="headerlink" title="4. Huber损失："></a><strong>4. Huber损失：</strong></h4><p><img src="/img/Huber%E6%8D%9F%E5%A4%B1.png" srcset="/img/loading.gif" alt="Huber损失"></p>
+<p>Huber损失是绝对误差，只是在误差很小时，就变为平方误差。</p>
+<ul>
+<li>当Huber损失在[-a，a]之间时，等价为MSE</li>
+<li>在[负无穷，-a]和[a，正无穷]时等价为MAE</li>
+</ul>
+<blockquote>
+<p>使用MAE训练神经网络最大的一个问题就是不变的大梯度，这可能导致在使用梯度下降快要结束时，错过了最小点。而对于MSE，梯度会随着损失的减小而减小，使结果更加精确。在这种情况下，Huber损失就非常有用。它会由于梯度的减小而落在最小值附近。比起MSE，它对异常点更加鲁棒。因此，Huber损失结合了MSE和MAE的优点。但是，Huber损失的问题是我们可能需要不断调整超参数delta。</p>
+</blockquote>
+<p>下图是Huber跟a随的变化曲线。当a很大时，等价为<strong>MSE</strong>曲线，当a很小时，等价为<strong>MAE</strong>曲线。</p>
+<p><img src="https://mmbiz.qpic.cn/mmbiz_gif/heS6wRSHVMnicjgQKMJqBDKca9Ujw9RFnyBu58P802WmLricA3Yra21kdgojwKuEkeKkRl0Lf04Wzo1GiaQ9G1Qag/640?wx_fmt=gif&tp=webp&wxfrom=5&wx_lazy=1" srcset="/img/loading.gif" alt="img"></p>
+<h3 id="1-2-分类问题："><a href="#1-2-分类问题：" class="headerlink" title="1.2 分类问题："></a>1.2 分类问题：</h3><h4 id="1-LogLoss："><a href="#1-LogLoss：" class="headerlink" title="1. LogLoss："></a><strong>1. LogLoss：</strong></h4><p><img src="/img/LogLoss.png" srcset="/img/loading.gif" alt=""></p>
+<p><strong>二分类</strong>任务中常用的损失函数，在LR中，通过对<strong>似然函数</strong>取对数得到。也就是<strong>交叉熵</strong>损失函数。</p>
+<h4 id="2-指数损失函数："><a href="#2-指数损失函数：" class="headerlink" title="2. 指数损失函数："></a>2. 指数损失函数：</h4><p>Adaboost的目标式子就是指数损失，在给定n个样本的情况下，Adaboost的损失函数为：</p>
+<p><img src="/img/%E6%8C%87%E6%95%B0%E6%8D%9F%E5%A4%B1%E5%87%BD%E6%95%B0.png" srcset="/img/loading.gif" alt=""></p>
+<h2 id="二、评价指标"><a href="#二、评价指标" class="headerlink" title="二、评价指标"></a>二、评价指标</h2><p>如何评估机器学习算法模型是任何项目中一个非常重要的环节。分类问题一般会选择准确率（Accuracy）或者AUC作为metric，回归问题使用MSE，但这些指标并不足以评判一个模型的好坏，接下来的内容我将尽可能包括各个评价指标。因为损失函数大部分可以直接作为评价指标，所以损失函数中出现过的简单介绍。</p>
+<h3 id="2-1-回归问题"><a href="#2-1-回归问题" class="headerlink" title="2.1 回归问题"></a>2.1 回归问题</h3><p><strong>1. MAE：</strong>平均绝对误差（Mean Absolute Error），范围[0，正无穷]</p>
+<p><img src="/img/%E5%B9%B3%E5%9D%87%E7%BB%9D%E5%AF%B9%E5%80%BC%E8%AF%AF%E5%B7%AE.png" srcset="/img/loading.gif" alt=""></p>
+<p><strong>2. MSE：</strong>均方误差（Mean Square Error），范围[0，正无穷]</p>
+<p><img src="/img/%E5%9D%87%E6%96%B9%E8%AF%AF%E5%B7%AE.png" srcset="/img/loading.gif" alt=""></p>
+<p><strong>3. RMSE：</strong>根均方误差（Root Mean Square Error），范围[0，正无穷]</p>
+<p><img src="/img/RMSE.png" srcset="/img/loading.gif" alt=""></p>
+<p>取均方误差的平方根可以使得量纲一致，这对于描述和表示是有意义的。</p>
+<p><strong>4. MAPE：</strong>平均绝对百分比误差（Mean Absolute Percentage Error）</p>
+<p><img src="/img/MAPE.png" srcset="/img/loading.gif" alt=""></p>
+<p><strong>注意点：</strong>当真实值有数据等于0时，存在分母0除问题，该公式不可用！</p>
+<p><strong>5. SMAPE：</strong>对称平均绝对百分比误差（Symmetric Mean Absolute Percentage Error）</p>
+<p><img src="/img/SMAPE.png" srcset="/img/loading.gif" alt=""></p>
+<p><strong>注意点</strong>：真实值、预测值均等于0时，存在分母为0，该公式不可用！</p>
+<p><strong>6. R Squared:</strong></p>
+<p><img src="/img/R_Squared.png" srcset="/img/loading.gif" alt=""></p>
+<p>R平方即<strong>决定系数（Coefficient of determination）</strong>，被人们称为最好的衡量线性回归法的指标。</p>
+<p>如果我们使用同一个算法模型，解决不同的问题，由于不同的数据集的量纲不同，MSE、RMSE等指标不能体现此模型针对不同问题所表现的优劣，也就无法判断模型更适合预测哪个问题。R平方得到的性能度量都在[0, 1]之间，可以判断此模型更适合预测哪个问题。</p>
+<p><strong>公式的理解：</strong></p>
+<ol>
+<li>分母代表baseline（平均值）的误差，分子代表模型的预测结果产生的误差；</li>
+<li>预测结果越大越好，R平方为1说明完美拟合，R平方为0说明和baseline一致；</li>
+</ol>
+<p><strong>7. 代码实现：</strong></p>
+<pre><code class="hljs python"><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> np
+<span class="hljs-keyword">from</span> sklearn <span class="hljs-keyword">import</span> metrics
+<span class="hljs-keyword">from</span> sklearn.metrics <span class="hljs-keyword">import</span> r2_score
+
+<span class="hljs-comment"># MAPE和SMAPE需要自己实现</span>
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">mape</span><span class="hljs-params">(y_true, y_pred)</span>:</span>
+    <span class="hljs-keyword">return</span> np.mean(np.abs((y_pred - y_true) / y_true)) * <span class="hljs-number">100</span>
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">smape</span><span class="hljs-params">(y_true, y_pred)</span>:</span>
+    <span class="hljs-keyword">return</span> <span class="hljs-number">2.0</span> * np.mean(np.abs(y_pred - y_true) / (np.abs(y_pred) + np.abs(y_true))) * <span class="hljs-number">100</span>
+
+y_true = np.array([<span class="hljs-number">1.0</span>, <span class="hljs-number">5.0</span>, <span class="hljs-number">4.0</span>, <span class="hljs-number">3.0</span>, <span class="hljs-number">2.0</span>, <span class="hljs-number">5.0</span>, <span class="hljs-number">-3.0</span>])
+y_pred = np.array([<span class="hljs-number">1.0</span>, <span class="hljs-number">4.5</span>, <span class="hljs-number">3.5</span>, <span class="hljs-number">5.0</span>, <span class="hljs-number">8.0</span>, <span class="hljs-number">4.5</span>, <span class="hljs-number">1.0</span>])
+
+<span class="hljs-comment"># MSE</span>
+print(metrics.mean_squared_error(y_true, y_pred)) <span class="hljs-comment"># 8.107142857142858</span>
+<span class="hljs-comment"># RMSE</span>
+print(np.sqrt(metrics.mean_squared_error(y_true, y_pred))) <span class="hljs-comment"># 2.847304489713536</span>
+<span class="hljs-comment"># MAE</span>
+print(metrics.mean_absolute_error(y_true, y_pred)) <span class="hljs-comment"># 1.9285714285714286</span>
+<span class="hljs-comment"># MAPE</span>
+print(mape(y_true, y_pred)) <span class="hljs-comment"># 76.07142857142858</span>
+<span class="hljs-comment"># SMAPE</span>
+print(smape(y_true, y_pred)) <span class="hljs-comment"># 57.76942355889724</span>
+<span class="hljs-comment"># R Squared</span>
+print(r2_score(y_true, y_pred))</code></pre>
+
+<h3 id="2-2-分类问题"><a href="#2-2-分类问题" class="headerlink" title="2.2 分类问题"></a>2.2 分类问题</h3><h4 id="0-Confusion-Matrix（混淆矩阵）："><a href="#0-Confusion-Matrix（混淆矩阵）：" class="headerlink" title="0. Confusion Matrix（混淆矩阵）："></a><strong>0. Confusion Matrix（混淆矩阵）：</strong></h4><p>混淆矩阵一般不直接作为模型的评价指标，但是他是后续多个指标的基础。以下为二分类的混淆矩阵，多分类的混淆矩阵和这个类似。</p>
+<table>
+<thead>
+<tr>
+<th align="center"></th>
+<th align="center">预测正例</th>
+<th align="center">预测反例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">真实正例</td>
+<td align="center">TP（真正例）</td>
+<td align="center">FN（假反例）</td>
+</tr>
+<tr>
+<td align="center">真实反例</td>
+<td align="center">FP（假正例）</td>
+<td align="center">TN（真反例）</td>
+</tr>
+</tbody></table>
+<p>我们训练模型的目的是为了降低FP和FN。很难说什么时候降低FP，什么时候降低FN。基于我们不同的需求，来决定降低FP还是FN。</p>
+<ul>
+<li><strong>降低假负数例（FN）：</strong>假设在一个癌症检测问题中，每100个人中就有5个人患有癌症。在这种情况下，即使是一个非常差的模型也可以为我们提供95％的准确度。但是，为了捕获所有癌症病例，当一个人实际上没有患癌症时，我们可能最终将其归类为癌症。因为它比不识别为癌症患者的危险要小，因为我们可以进一步检查。但是，错过癌症患者将是一个巨大的错误，因为不会对其进行进一步检查。</li>
+<li><strong>降低假正例（FP）：</strong>假设在垃圾邮件分类任务中，垃圾邮件为正样本。如果我们收到一个正常的邮件，比如某个公司或学校的offer，模型却识别为垃圾邮件（FP），那将损失非常大。所以在这种任务中，需要尽可能降低假正例。</li>
+</ul>
+<h4 id="1-Accuacy（准确率）："><a href="#1-Accuacy（准确率）：" class="headerlink" title="1. Accuacy（准确率）："></a><strong>1. Accuacy（准确率）：</strong></h4><p><img src="/img/Accuracy.png" srcset="/img/loading.gif" alt=""></p>
+<p>准确率也就是在所有样本中，有多少样本被预测正确。</p>
+<p>当样本类别均衡时，Accuracy是一个很好的指标。</p>
+<p>但在样本不平衡的情况下，产生效果较差。假设我们的训练数据中只有2%的正样本，98%的负样本，那么如果模型全部预测为负样本，准确率便是98%,。分类的准确率指标很高，会给我们一种模型很好的假象。</p>
+<h4 id="2-Precision（精准率）："><a href="#2-Precision（精准率）：" class="headerlink" title="2. Precision（精准率）："></a><strong>2. Precision（精准率）：</strong></h4><p><img src="/img/Precision.png" srcset="/img/loading.gif" alt=""></p>
+<p><strong>含义：</strong>预测为正例的样本中有多少实际为正；</p>
+<h4 id="3-Recall（召回率）："><a href="#3-Recall（召回率）：" class="headerlink" title="3. Recall（召回率）："></a><strong>3. Recall（召回率）：</strong></h4><p><img src="/img/Recall.png" srcset="/img/loading.gif" alt=""></p>
+<p><strong>含义：</strong>实际为正例的样本有多少被预测为正；</p>
+<h4 id="4-P-R曲线："><a href="#4-P-R曲线：" class="headerlink" title="4. P-R曲线："></a><strong>4. P-R曲线：</strong></h4><p>通过选择不同的阈值，得到Recall和Precision，以Recall为横坐标，Precision为纵坐标得到的曲线图。</p>
+<p><img src="/img/ps.png" srcset="/img/loading.gif" alt="img"></p>
+<p><strong>PR曲线性质：</strong></p>
+<ul>
+<li><p>如果一个学习器的P-R曲线被另一个学习器的曲线完全包住，后者性能优于前者;</p>
+</li>
+<li><p>如果两个学习器的曲线相交，可以通过平衡点（如上图所示）来度量性能；</p>
+</li>
+<li><p><strong>阈值下降：</strong></p>
+</li>
+<li><ul>
+<li><strong>Recall：</strong>不断增加，因为越来越多的样本被划分为正例，假设阈值为0.，全都划分为正样本了，此时recall为1；</li>
+<li><strong>Precision：</strong>正例被判为正例的变多，但负例被判为正例的也变多了，因此precision会振荡下降，不是严格递减；</li>
+</ul>
+</li>
+<li><p>如果有个划分点可以把正负样本完全区分开，那么P-R曲线面积是1*1；</p>
+</li>
+</ul>
+<h4 id="5-ROC-AUC："><a href="#5-ROC-AUC：" class="headerlink" title="5. ROC-AUC："></a><strong>5. ROC-AUC：</strong></h4><p><strong>Area Under Curve(AUC)</strong> 是<strong>二分类</strong>问题中使用非常广泛的一个评价指标。<strong>AUC的本质是，任取一个正样本和负样本，模型输出正样本的值大于负样本值的概率</strong>。构成AUC的两个基本指标是假正例率和真正例率。</p>
+<ul>
+<li><strong>横轴-假正例率：</strong> 实际为负的样本多少被预测为正；</li>
+</ul>
+<p><img src="/img/%E6%A8%AA%E8%BD%B4-%E5%81%87%E6%AD%A3%E4%BE%8B%E7%8E%87.png" srcset="/img/loading.gif" alt=""></p>
+<ul>
+<li><strong>纵轴-真正例率：</strong> 实际为正的样本多少被预测为正；</li>
+</ul>
+<p><img src="/img/%E7%BA%B5%E8%BD%B4-%E7%9C%9F%E6%AD%A3%E4%BE%8B%E7%8E%87.png" srcset="/img/loading.gif" alt=""></p>
+<p>TPR和FPR的范围均是[0,1]，通过选择不同的阈值得到TPR和FPR，然后绘制ROC曲线。</p>
+<p><img src="/img/ew.png" srcset="/img/loading.gif" alt="img"></p>
+<p><strong>曲线性质：</strong></p>
+<ol>
+<li>阈值最大时，对应<strong>坐标点为(0,0)</strong>,阈值最小时，对应<strong>坐标点(1,1)</strong>；</li>
+<li>ROC曲线越靠近左上角，该分类器的性能越好；</li>
+<li>对角线表示一个随机猜测分类器；</li>
+<li>若一个学习器的ROC曲线被另一个学习器的曲线完全包住，后者性能优于前者；</li>
+</ol>
+<p><strong>AUC：</strong> ROC曲线下的面积为AUC值。</p>
+<h4 id="7-代码实现："><a href="#7-代码实现：" class="headerlink" title="7. 代码实现："></a>7. 代码实现：</h4><pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.metrics <span class="hljs-keyword">import</span> accuracy_score,precision_score,recall_score,f1_score,fbeta_score
+
+y_test = [<span class="hljs-number">1</span>,<span class="hljs-number">1</span>,<span class="hljs-number">1</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">1</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>]
+y_pred = [<span class="hljs-number">1</span>,<span class="hljs-number">1</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">1</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>]
+
+print(<span class="hljs-string">"准确率为:&#123;0:%&#125;"</span>.format(accuracy_score(y_test, y_pred)))
+print(<span class="hljs-string">"精确率为:&#123;0:%&#125;"</span>.format(precision_score(y_test, y_pred)))
+print(<span class="hljs-string">"召回率为:&#123;0:%&#125;"</span>.format(recall_score(y_test, y_pred)))
+print(<span class="hljs-string">"F1分数为:&#123;0:%&#125;"</span>.format(f1_score(y_test, y_pred)))
+print(<span class="hljs-string">"Fbeta为:&#123;0:%&#125;"</span>.format(fbeta_score(y_test, y_pred,beta =<span class="hljs-number">1.2</span>)))</code></pre>
+
+
+            </article>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E6%95%B0%E6%8D%AE%E6%8C%96%E6%8E%98/">数据挖掘</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/">机器学习</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a href="https://zh.wikipedia.org/wiki/Wikipedia:CC_BY-SA_3.0%E5%8D%8F%E8%AE%AE%E6%96%87%E6%9C%AC" target="_blank" rel="nofollow noopener noopener">CC BY-SA 3.0协议</a> 。转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-6">
+                    
+                    
+                  </div>
+                  <div class="post-next col-6">
+                    
+                    
+                      <a href="/2020/06/04/undefined/">
+                        <span class="hidden-mobile">Word2vec特征构造</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <div class="comments" id="comments">
+                
+                
+  <div id="vcomments"></div>
+  <script defer src="https://cdn.staticfile.org/valine/1.4.14/Valine.min.js" ></script>
+
+  <script type="text/javascript">
+    var oldLoadVa = window.onload;
+    window.onload = function () {
+      oldLoadVa && oldLoadVa();
+
+      new Valine({
+        el: "#vcomments",
+        app_id: "vlgtQ35JA02DviH42D5xO7DA-gzGzoHsz",
+        app_key: "E4PyoDjEuOj4oRJoSa5F4i05",
+        placeholder: "说点什么",
+        path: window.location.pathname,
+        avatar: "retro",
+        meta: ["nick","mail"],
+        pageSize: "10",
+        lang: "zh-CN",
+        highlight: true,
+        recordIP: true,
+        serverURLs: "",
+      });
+    };
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="https://valine.js.org" target="_blank" rel="nofollow noopener noopener">comments
+      powered by Valine.</a></noscript>
+
+
+              </div>
+            
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a id="scroll-top-button" href="#" role="button">
+      <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener">
+        <span>Fluid</span></a>
+    </div>
+    
+  <div>
+    
+      <!-- 不蒜子统计PV -->
+      
+      <span id="busuanzi_container_site_pv" style="display: none">
+      总访问量 <span id="busuanzi_value_site_pv"></span> 次
+    </span>
+    
+    
+      <!-- 不蒜子统计UV -->
+      
+      <span id="busuanzi_container_site_uv" style="display: none">
+      总访客数 <span id="busuanzi_value_site_uv"></span> 人
+    </span>
+    
+  </div>
+
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="/js/main.js" ></script>
+
+
+  <script  src="/js/lazyload.js" ></script>
+
+
+
+  
+  <script  src="https://cdn.staticfile.org/tocbot/4.11.1/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: '.post-content',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        collapseDepth: 0,
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc').css('visibility', 'visible');
+      }
+    });
+  </script>
+
+
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+<!-- Plugins -->
+
+
+  
+
+  
+    <!-- Google Analytics -->
+    <script defer>
+      (function (i, s, o, g, r, a, m) {
+        i['GoogleAnalyticsObject'] = r;
+        i[r] = i[r] || function () {
+          (i[r].q = i[r].q || []).push(arguments)
+        }, i[r].l = 1 * new Date();
+        a = s.createElement(o),
+          m = s.getElementsByTagName(o)[0];
+        a.async = 1;
+        a.src = g;
+        m.parentNode.insertBefore(a, m)
+      })(window, document, 'script', 'https://www.google-analytics.com/analytics.js', 'ga');
+
+      ga('create', 'UA-167761233-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "常见损失函数和评价指标总结&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      searchFunc(path, 'local-search-input', 'local-search-result');
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+  <script>
+    $('#post img:not(.no-zoom img, img[no-zoom]), img[zoom]').each(
+      function () {
+        var element = document.createElement('a');
+        $(element).attr('data-fancybox', 'images');
+        $(element).attr('href', $(this).attr('src'));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript">
+      //定义获取词语下标
+      var a_idx = 0;
+      jQuery(document).ready(function ($) {
+        //点击body时触发事件
+        $("body").click(function (e) {
+          //需要显示的词语
+          var a = new Array("富强", "民主", "文明", "和谐", "自由", "平等", "公正", "法治", "爱国", "敬业", "诚信", "友善");
+          //设置词语给span标签
+          var $i = $("<span/>").text(a[a_idx]);
+          //下标等于原来下标+1  余 词语总数
+          a_idx = (a_idx + 1) % a.length;
+          //获取鼠标指针的位置，分别相对于文档的左和右边缘。
+          //获取x和y的指针坐标
+          var x = e.pageX, y = e.pageY;
+          //在鼠标的指针的位置给$i定义的span标签添加css样式
+          $i.css({
+            "z-index": 999,
+            "top": y - 20,
+            "left": x,
+            "position": "absolute",
+            "font-weight": "bold",
+            "color": rand_color()
+          });
+          // 随机颜色
+          function rand_color() {
+            return "rgb(" + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + "," + ~~(255 * Math.random()) + ")"
+          }
+          //在body添加这个标签
+          $("body").append($i);
+          //animate() 方法执行 CSS 属性集的自定义动画。
+          //该方法通过CSS样式将元素从一个状态改变为另一个状态。CSS属性值是逐渐改变的，这样就可以创建动画效果。
+          //详情请看http://www.w3school.com.cn/jquery/effect_animate.asp
+          $i.animate({
+            //将原来的位置向上移动180
+            "top": y - 180,
+            "opacity": 0
+            //1500动画的速度
+          }, 1500, function () {
+            //时间到了自动删除
+            $i.remove();
+          });
+        });
+      })
+      ;
+    </script>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>
