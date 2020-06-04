@@ -4,6 +4,31 @@
   
   
   <entry>
+    <title>Word2vec特征构造</title>
+    <link href="/2020/06/04/undefined/"/>
+    <url>/2020/06/04/undefined/</url>
+    
+    <content type="html"><![CDATA[<h2 id="Word2vec特征构造"><a href="#Word2vec特征构造" class="headerlink" title="Word2vec特征构造"></a>Word2vec特征构造</h2><p>我参考了近期数据挖掘比赛的方案，发现使用深度学习里Word2vec词向量越来越多，而且采用这种Embedding的方法很有成效，主要针对时序列数据，所以我来总结一下Word2vec特征构造。</p><p>Word2vec下有两种算法最常用：CBOW和Skip-Gram，这里就不谈Word2vec的原理了。</p><p>在数据挖掘中，常使用groupby函数来实现句子构造，例如对每个用户的行为进行分组，形成多个句子。</p><h4 id="创建句子"><a href="#创建句子" class="headerlink" title="创建句子"></a>创建句子</h4><pre><code class="hljs python">groups = df.groupby([<span class="hljs-string">'user_id'</span>])df_log[<span class="hljs-string">'creative_id'</span>] = df[<span class="hljs-string">'creative_id'</span>].astype(<span class="hljs-string">'str'</span>)print(<span class="hljs-string">'starting....'</span>)sentences = [groups.get_group(g)[<span class="hljs-string">'creative_id'</span>].tolist() <span class="hljs-keyword">for</span> g <span class="hljs-keyword">in</span> groups.groups]</code></pre><h4 id="通过gensim（tutorials）库来实现"><a href="#通过gensim（tutorials）库来实现" class="headerlink" title="通过gensim（tutorials）库来实现"></a>通过gensim（<a href="https://radimrehurek.com/gensim/auto_examples/index.html" target="_blank" rel="noopener">tutorials</a>）库来实现</h4><pre><code class="hljs python"><span class="hljs-keyword">from</span> gensim.models <span class="hljs-keyword">import</span> Word2Vecsize = <span class="hljs-number">20</span>  <span class="hljs-comment">#20维，可变</span>model = Word2Vec(sentences, size=size, window=<span class="hljs-number">20</span>, min_count=<span class="hljs-number">1</span>, sg=<span class="hljs-number">1</span>, workers=<span class="hljs-number">12</span>, iter=<span class="hljs-number">10</span>)</code></pre><h4 id="创建Word2vec特征"><a href="#创建Word2vec特征" class="headerlink" title="创建Word2vec特征"></a>创建Word2vec特征</h4><pre><code class="hljs python"><span class="hljs-keyword">import</span> numpy <span class="hljs-keyword">as</span> npemb = []<span class="hljs-keyword">for</span> w <span class="hljs-keyword">in</span> df[<span class="hljs-string">'id'</span>].unique():    vec = [w]    <span class="hljs-keyword">try</span>:        vec.extend(model[str(w)])    <span class="hljs-keyword">except</span>:        vec.extend(np.ones(size) * -size)    emb = np.vstack((emb, vec))emb_df = pd.DataFrame(emb)emb_cols = [<span class="hljs-string">'id'</span>]<span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> range(size):    emb_cols.append(<span class="hljs-string">'x_y_bin1_emb_&#123;&#125;'</span>.format(i))emb_df.columns = emb_cols</code></pre>]]></content>
+    
+    
+    <categories>
+      
+      <category>数据挖掘</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>Word2vec</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>XGBoost构造特征</title>
     <link href="/2020/06/03/undefined/"/>
     <url>/2020/06/03/undefined/</url>
