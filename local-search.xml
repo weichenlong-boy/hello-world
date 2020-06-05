@@ -248,6 +248,25 @@
   
   
   <entry>
+    <title>模型保存与读取</title>
+    <link href="/2020/05/26/undefined/"/>
+    <url>/2020/05/26/undefined/</url>
+    
+    <content type="html"><![CDATA[<h2 id="模型保存与读取"><a href="#模型保存与读取" class="headerlink" title="模型保存与读取"></a>模型保存与读取</h2><p>当模型训练完成后，尤其是训练集上做交叉验证，及时保存模型就可以保存精度方便下一次直接预测。本文介绍Python保存模型的方法。</p><p>有两个模块用来保存模型 : pickle和joblib</p><h4 id="导入数据和训练模型"><a href="#导入数据和训练模型" class="headerlink" title="导入数据和训练模型"></a>导入数据和训练模型</h4><pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.svm <span class="hljs-keyword">import</span> SVC<span class="hljs-keyword">from</span> sklearn <span class="hljs-keyword">import</span> datasets<span class="hljs-keyword">from</span> sklearn.model_selection <span class="hljs-keyword">import</span> train_test_split<span class="hljs-comment">#定义一个分类器</span>svm = SVC()iris = datasets.load_iris()X = iris.datay = iris.targetX_train, X_test, Y_train, Y_test = train_test_split(X, y, test_size=<span class="hljs-number">0.3</span>, random_state=<span class="hljs-number">1</span>)<span class="hljs-comment">#训练模型</span>svm.fit(X_train, Y_train)</code></pre><h4 id="pickle"><a href="#pickle" class="headerlink" title="pickle"></a>pickle</h4><pre><code class="hljs python"><span class="hljs-keyword">import</span> pickle <span class="hljs-comment"># 保存，在当前目录下可以看到svm.pickle</span><span class="hljs-keyword">with</span> open(<span class="hljs-string">'svm.pickle'</span>,<span class="hljs-string">'wb'</span>) <span class="hljs-keyword">as</span> fw:    pickle.dump(svm,fw)    <span class="hljs-comment">#读取，加载svm.pickle</span><span class="hljs-keyword">with</span> open(<span class="hljs-string">'svm.pickle'</span>,<span class="hljs-string">'rb'</span>) <span class="hljs-keyword">as</span> fr:    new_svm = pickle.load(fr)    <span class="hljs-comment">#预测    </span>result = new_svm.predictn(X_test)</code></pre><h4 id="joblib"><a href="#joblib" class="headerlink" title="joblib"></a>joblib</h4><p>Sklearn的模型导出本质上是利用Python的Pickle机制。对Python的函数进行序列化，也就是把训练好的Transformer函数序列化并存为文件。</p><pre><code class="hljs python"><span class="hljs-keyword">from</span> sklearn.externals <span class="hljs-keyword">import</span> joblib<span class="hljs-comment"># 保存，在当前目录下可以看到svm.pickle</span>joblib.dump(svm,<span class="hljs-string">'svm.pkl'</span>)<span class="hljs-comment">#读取，加载svm.pickle</span>new_svm = joblib.load(<span class="hljs-string">'svm.pkl'</span>)<span class="hljs-comment">#预测    </span>result = new_svm.predictn(X_test)</code></pre>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>机器学习</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>python内置的小函数</title>
     <link href="/2020/05/25/undefined/"/>
     <url>/2020/05/25/undefined/</url>
