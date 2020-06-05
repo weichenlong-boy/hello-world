@@ -219,7 +219,7 @@
     <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">LR</span><span class="hljs-params">(self,X,Y)</span>:</span>
         onehot = OneHotEncoder()
         onehot_X = onehot.fit_transform(X)
-        onehot_Y = onehot.fit_transform(Y)
+        onehot_Y = onehot.transform(Y)
         <span class="hljs-keyword">return</span> onehot_X,onehot_Y
     <span class="hljs-comment">##整体训练</span>
     <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">fit_model</span><span class="hljs-params">(self,X_train,y_train,X_test)</span>:</span>
