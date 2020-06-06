@@ -143,7 +143,7 @@
                   
                   <span class="post-meta mr-2">
                     <i class="iconfont icon-chart"></i>
-                    852 字
+                    868 字
                   </span>
                 
 
@@ -153,7 +153,7 @@
                       <i class="iconfont icon-clock-fill"></i>
                     
                     
-                    15
+                    16
                      分钟
                   </span>
                 
@@ -283,38 +283,42 @@ print(best)</code></pre>
 <h4 id="调参LightGBM示例"><a href="#调参LightGBM示例" class="headerlink" title="调参LightGBM示例"></a>调参LightGBM示例</h4><pre><code class="hljs python"><span class="hljs-keyword">from</span> hyperopt <span class="hljs-keyword">import</span> fmin, tpe, hp, partial, Trials
 <span class="hljs-keyword">import</span> lightgbm <span class="hljs-keyword">as</span> lgb
 <span class="hljs-keyword">from</span> numpy.random <span class="hljs-keyword">import</span> RandomState
+<span class="hljs-keyword">import</span> warnings
+warnings.filterwarnings(<span class="hljs-string">'ignore'</span>)
 
-dtrain = xgb.DMatrix(data=x_train,label=y_train)
-dtest = xgb.DMatrix(data=x_test,label=y_test)
+dtrain = lgb.Dataset(data=x_train,label=y_train)
+dtest = lgb.Dataset(data=x_test,label=y_test)
 
 <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">hyperopt_objective</span><span class="hljs-params">(params)</span>:</span>
     model = lgb.LGBMRegressor(
-        num_leaves = <span class="hljs-number">31</span>,
+        num_leaves = int(params[<span class="hljs-string">'num_leaves'</span>]),
         max_depth=int(params[<span class="hljs-string">'max_depth'</span>]),
         learning_rate=params[<span class="hljs-string">'learning_rate'</span>],
-        objective=<span class="hljs-string">'regressor'</span>,
-        eval_metric=<span class="hljs-string">'rmse'</span>,
+        n_estimators=int(params[<span class="hljs-string">'n_estimators'</span>]),
+        objective=<span class="hljs-string">'binary'</span>,
+        eval_metric=<span class="hljs-string">'auc'</span>,
         seed=<span class="hljs-number">42</span>,
         nthread=<span class="hljs-number">-1</span>,
     )
     res = lgb.cv(model.get_params(), dtrain, num_boost_round=<span class="hljs-number">10</span>, nfold=<span class="hljs-number">5</span>,
-             callbacks=[xgb.callback.print_evaluation(show_stdv=<span class="hljs-literal">False</span>),
-                        xgb.callback.early_stop(<span class="hljs-number">3</span>)])
-    <span class="hljs-keyword">return</span> np.min(res[<span class="hljs-string">'test-rmse-mean'</span>]) <span class="hljs-comment"># as hyperopt minimises</span>
+             metrics=<span class="hljs-string">'auc'</span>,early_stopping_rounds=<span class="hljs-number">10</span>)
+    <span class="hljs-keyword">return</span> -np.min(res[<span class="hljs-string">'auc-mean'</span>]) <span class="hljs-comment"># as hyperopt minimises</span>
 
 params_space = &#123;
-    <span class="hljs-string">'max_depth'</span>: hp.randint(<span class="hljs-string">'max_depth'</span>, <span class="hljs-number">6</span>),
-    <span class="hljs-string">'learning_rate'</span>: hp.uniform(<span class="hljs-string">'learning_rate'</span>, <span class="hljs-number">1e-3</span>, <span class="hljs-number">5e-1</span>),
+    <span class="hljs-string">'max_depth'</span>: hp.uniform(<span class="hljs-string">'max_depth'</span>, <span class="hljs-number">1</span>,<span class="hljs-number">15</span>),
+    <span class="hljs-string">'learning_rate'</span>: hp.uniform(<span class="hljs-string">'learning_rate'</span>, <span class="hljs-number">1e-3</span>, <span class="hljs-number">3e-1</span>),
+    <span class="hljs-string">'num_leaves'</span>: hp.uniform(<span class="hljs-string">'num_leaves'</span>, <span class="hljs-number">1</span>,<span class="hljs-number">100</span>),
+    <span class="hljs-string">'n_estimators'</span>: hp.uniform(<span class="hljs-string">'n_estimators'</span>, <span class="hljs-number">1</span>,<span class="hljs-number">2000</span>),
 &#125;
 
-trials = hyperopt.Trials()
+trials = Trials()
 best = fmin(
     hyperopt_objective,
     space=params_space,
     algo=tpe.suggest,
-    max_evals=<span class="hljs-number">50</span>,
+    max_evals=<span class="hljs-number">100</span>,
     trials=trials,
-    rstate=RandomState(<span class="hljs-number">123</span>)
+    rstate=RandomState(<span class="hljs-number">1</span>)
 )
 
 print(<span class="hljs-string">"\n展示hyperopt获取的最佳结果，但是要注意的是我们对hyperopt最初的取值范围做过一次转换"</span>)
